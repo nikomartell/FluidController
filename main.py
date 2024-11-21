@@ -9,7 +9,7 @@ import csv
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.device = PumpCon('COM4', 9600)
+        self.device = PumpCon('USB VID:PID=0403:6001 SER=FTDN6M3BA', 9600)
         self.initUI(self.device)
         
 

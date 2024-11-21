@@ -2,7 +2,17 @@ import os
 import serial
 import serial.tools.list_ports
 from PyQt6.QtWidgets import QMessageBox
-
+class PumpCon:
+    def __init__(self, address, baudrate):
+        self.address = address
+        self.ser = None
+        try:
+            self.ser = serial.Serial(address, baudrate)
+        except serial.SerialException as e:
+            self.ser = None
+            QMessageBox.critical(None, 'Error', f'Could not open port {address}: {e}')
+        if self.ser is None:
+            return self.ser
 class PumpCon:
     def __init__(self, device_name, baudrate):
         self.name = device_name
