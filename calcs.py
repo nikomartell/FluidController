@@ -1,13 +1,31 @@
 
+def setComponent(component):
+    return component
+
 def setFlowRate(flowRate):
-    flowRate = flowRate
+    if flowRate == '':
+        flowRate = 1.0
+    return flowRate
     
 def setStrokes(strokes):
-    strokes = strokes
+    if strokes == '':
+        strokes = 10
+    return strokes
     
 def setAcceleration(acceleration):
-    acceleration = acceleration
+    if acceleration == '':
+        acceleration = 1.0
+    return acceleration
     
 def setFlowDirection(flowDirection):
-    flowDirection = flowDirection
+    return flowDirection
     
+def setDuration(duration):
+    if duration == '':
+        duration = 10
+    return duration
+
+def setIterations(iterations):
+    if iterations == '':
+        iterations = 10
+    return iterations

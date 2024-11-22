@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QComboBox, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtCore import QTimer, Qt
-from calcs import setFlowRate, setStrokes, setAcceleration, setFlowDirection
+from calcs import setComponent, setFlowRate, setStrokes, setAcceleration, setFlowDirection, setDuration, setIterations
 
-def create_control_center():
+def create_control_center(controller):
+    
+    con = controller
     Container = QWidget()
     Container.setObjectName('ControlCenter')
     
@@ -125,8 +127,12 @@ def create_control_center():
     
     # Scale Control
     def update_weight():
-        # This function should interact with the device to get the current weight
-        current_weight = "0.000"
+        # This function should interact with the controller to get the current weight
+        if con.scale is not None:
+            scaleData = con.scale.get_weight()
+            current_weight = f"{scaleData:.3f}"
+        else:
+            current_weight = "Scale not found"
         weightLabel.setText(f"{current_weight}")
     weightLabel = QLabel('', Container)
     weightLabel.setObjectName('weight')
@@ -151,8 +157,17 @@ def create_control_center():
     # Send Commands from text boxes to device
     def get_commands():
         # Functions used for each variable translates input to commands
-        return [component.currentText(), flowRate.text(), strokes.text(), 
-                acceleration.text(), flowDirection.currentText()]
+        componentCom = setComponent(component.currentText())
+        flowRateCom = setFlowRate(flowRate.text())
+        strokesCom = setStrokes(strokes.text())
+        accelerationCom = setAcceleration(acceleration.text())
+        flowDirectionCom = setFlowDirection(flowDirection.currentText())
+        durationCom = setDuration(duration.text())
+        iterationsCom = setIterations(iterations.text())
+        
+        commands = [setComponent(component.currentText()), flowRateCom, strokesCom, accelerationCom, flowDirectionCom, durationCom, iterationsCom]
+        
+        return commands
     
     def set_commands(commands):
         component.setCurrentText(commands[0])

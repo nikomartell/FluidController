@@ -1,5 +1,5 @@
 import sys
-from PumpCon import Component, PumpCon
+from PumpCon import PumpCon
 from ControlCenter import create_control_center
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
 from PyQt6.QtCore import Qt
@@ -69,7 +69,7 @@ class App(QWidget):
         
         # Device Control Center
         control_layout = QHBoxLayout()
-        self.deviceControl = create_control_center()
+        self.deviceControl = create_control_center(device)
         self.deviceControl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         control_layout.addWidget(self.deviceControl, alignment=Qt.AlignmentFlag.AlignHCenter)
         
@@ -81,7 +81,7 @@ class App(QWidget):
         button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
         self.send_commands_button = QPushButton('Send Commands', self)
-        self.send_commands_button.clicked.connect(self.send_commands)
+        self.send_commands_button.clicked.connect(self.execute)
         button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         layout.addLayout(control_layout)
@@ -92,16 +92,10 @@ class App(QWidget):
     #---------------------------------------------------------#
     
     # Methods
-    def send_commands(self):
+    def execute(self):
         commands = self.deviceControl.get_commands()
-        if self.device.ser:
-            for command in commands:
-                self.device.send_command(command)
-                response = self.device.read_response()
-                print(f'Command: {command}, Response: {response}')
-                QMessageBox.information(self, 'Success', 'Commands sent successfully')
-        else:
-            QMessageBox.critical(self, 'Error', 'Device not connected')
+        self.device.set_commands(commands)
+        self.device.send_commands()
 
     def show_message_box(self):
         QMessageBox.information(self, 'Message', 'This is a message box')
@@ -117,7 +111,7 @@ class App(QWidget):
             QMessageBox.critical(self, 'Error', 'Device not connected')
 
     def refresh_device_connection(self):
-        self.device = PumpCon('pump', 9600)
+        self.device = PumpCon(9600)
         self.initUI(self.device)
         
     def store_commands_to_csv(self):
