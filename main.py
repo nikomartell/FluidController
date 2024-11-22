@@ -1,5 +1,5 @@
 import sys
-from PumpCon import PumpCon
+from PumpCon import Component, PumpCon
 from ControlCenter import create_control_center
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
 from PyQt6.QtCore import Qt
@@ -9,7 +9,7 @@ import csv
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.device = PumpCon('USB VID:PID=0403:6001 SER=FTDN6M3BA', 9600)
+        self.device = PumpCon(9600)
         self.initUI(self.device)
         
 
@@ -23,13 +23,14 @@ class App(QWidget):
         self.setWindowTitle('Fluidics Device Controller')
         layout = QVBoxLayout()
         
-        if not device.ser:
-            error_label = QLabel('Error: Device not connected', self)
-            error_label.setStyleSheet('color: red; font-weight: bold;')
-            error_label.setObjectName('device_info')
-            layout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
-        else:
-            pump_info_label = QLabel(f'Device: {self.device.name}, Port: {self.device.port}', self)
+        for error in device.errors:
+            if error is not None:
+                error_label = QLabel(error, self)
+                error_label.setStyleSheet('color: red; font-weight: bold;')
+                error_label.setObjectName('device_info')
+                layout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
+        if device is not None:
+            pump_info_label = QLabel(f'Device: {self.device.name}', self)
             pump_info_label.setStyleSheet('color: green; font-weight: bold;')
             pump_info_label.setObjectName('device_info')
             layout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
