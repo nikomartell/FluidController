@@ -36,12 +36,18 @@ class PumpCon:
         # Choose the correct device to send commands to
         match self.stagedComponent:
             case 'Linear Motor':
-                for command in self.stagedCommands:
-                    self.linearMotor.send_command(command)
-                
-                self.linearMotor.read_response()
-            case 'Rotary Motor':
-                for command in self.stagedCommands:
+                if self.linearMotor is not None:
+                    for command in self.stagedCommands:
+                        self.linearMotor.send_command(command)
+                    
+                    self.linearMotor.read_response()
+                if self.rotaryMotor is not None:
+                    for command in self.stagedCommands:
+                        self.rotaryMotor.send_command(command)
+                    
+                    self.rotaryMotor.read_response()
+                else:
+                    QMessageBox.critical(None, 'Error', 'Motor not found')
                     self.rotaryMotor.send_command(command)
                 
                 self.rotaryMotor.read_response()
