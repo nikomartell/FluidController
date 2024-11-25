@@ -1,15 +1,14 @@
-import serial
-import serial.tools.list_ports
-from PyQt6.QtWidgets import QMessageBox
+import pytrinamic
+from pytrinamic.connections import ConnectionManager
+from pytrinamic.modules import TMCM1140
+import time
 
 class Motor:
-    def __init__(self, ser, baudrate):
-        self.name = None
-        self.port = None
+    def __init__(self, baudrate):
         self.ser = None
         ports = serial.tools.list_ports.comports()
         for port in ports:
-            if ser in port.hwid:
+            if 'FTDN6M3B' in port.hwid:
                 try:
                     self.name = port.description
                     self.ser = serial.Serial(port.device, baudrate)
@@ -21,7 +20,7 @@ class Motor:
         if self.ser is None:
             return self.ser
 
-    def send_command(self, command): 
+    def send_command(self, command):
         if self.ser:
             if not isinstance(command, str):
                 command = str(command)
@@ -34,9 +33,19 @@ class Motor:
             return self.ser.readline().decode()
         else:
             raise Exception("Serial port not initialized")
-        
+
     def send_binary_command(self, command):
-        self.ser.write(command.to_bytes(1, byteorder='big'))
-        
+        if self.ser:
+            self.ser.write(command.to_bytes(1, byteorder='big'))
+        else:
+            raise Exception("Serial port not initialized")
+
     def enter_ascii_mode(self):
         self.send_binary_command(139)
+
+    def send_ascii_commands(self, commands):
+        self.enter_ascii_mode()
+        for command in commands:
+            self.send_command(command)
+            response = self.read_response()
+            print(f"Response: {response}")

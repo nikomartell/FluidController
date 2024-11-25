@@ -1,6 +1,6 @@
 import sys
 from PumpCon import PumpCon
-from ControlCenter import create_control_center
+from ControlCenter import controlCenter
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
@@ -69,9 +69,8 @@ class App(QWidget):
         
         # Device Control Center
         control_layout = QHBoxLayout()
-        self.deviceControl = create_control_center(device)
-        self.deviceControl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        control_layout.addWidget(self.deviceControl, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self.deviceControl = controlCenter(device)
+        control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignCenter)
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -93,22 +92,10 @@ class App(QWidget):
     
     # Methods
     def execute(self):
-        commands = self.deviceControl.get_commands()
-        self.device.set_commands(commands)
-        self.device.send_commands()
-
-    def show_message_box(self):
-        QMessageBox.information(self, 'Message', 'This is a message box')
-
-    def send_command(self):
-        command = self.command_input.text()
         
-        if self.device.ser:
-            self.device.send_command(command)
-            response = self.device.read_response()
-            QMessageBox.information(self, 'Response', response)
-        else:
-            QMessageBox.critical(self, 'Error', 'Device not connected')
+        commands = self.deviceControl.get_commands()
+        self.device.send_commands(commands)
+
 
     def refresh_device_connection(self):
         self.device = PumpCon(9600)

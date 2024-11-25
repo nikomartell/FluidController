@@ -12,7 +12,7 @@ class Scale:
             if ser in port.hwid:
                 try:
                     self.name = port.description
-                    self.ser = serial.Serial(port.device, baudrate)
+                    self.ser = serial.Serial(port.device, baudrate, timeout=.1)
                     self.port = port
                     break
                 except serial.SerialException as e:
@@ -29,11 +29,28 @@ class Scale:
 
     def read_response(self):
         if self.ser:
-            return self.ser.readline().decode()
+            return self.ser.readline()
         else:
             raise Exception("Serial port not initialized")
         
     def get_weight(self):
         if self.ser:
             self.ser.write('W'.encode())
-            return self.ser.readline().decode()
+            weightBin = self.read_response()
+            print(weightBin)
+            weight = self.parse_weight(weightBin)
+            return weight
+        
+    def parse_weight(self, data):
+        
+        if not data:
+            weight = "No data received from the scale"
+
+        sign = data[0:1].decode()
+        weight = data[2:10].decode().strip()
+        unit = data[11:13].decode().strip()
+        
+        if sign == '-':
+            weight = '-' + weight
+        
+        return weight
