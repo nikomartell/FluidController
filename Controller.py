@@ -3,13 +3,13 @@ import serial
 import serial.tools.list_ports
 from PyQt6.QtWidgets import QMessageBox
 from Scale import Scale
-from Motor import LinearMotor, RotaryMotor
+from Motor import Motor
         
 class Controller:
     def __init__(self):
         self.name = 'Pump Controller'
-        self.linearMotor = LinearMotor()
-        self.rotaryMotor = RotaryMotor()
+        self.linearMotor = Motor()
+        self.rotaryMotor = Motor()
         self.scale = Scale('FTDN6FIV')
         self.errors = [None, None, None]
         self.stagedCommands = ''

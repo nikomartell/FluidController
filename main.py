@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 import csv
-
+https://prod.liveshare.vsengsaas.visualstudio.com/join?8CD9D8E1C6E29AD399723A1A682EA4F96997
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -23,18 +23,21 @@ class App(QWidget):
         self.setWindowTitle('Fluidics Device Controller')
         layout = QVBoxLayout()
         
+        errorLayout = QHBoxLayout()
+        errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         for error in device.errors:
             if error is not None:
                 error_label = QLabel(error, self)
                 error_label.setStyleSheet('color: red; font-weight: bold;')
                 error_label.setObjectName('device_info')
-                layout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
+                errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
         if device is not None:
             pump_info_label = QLabel(f'Device: {self.device.name}', self)
             pump_info_label.setStyleSheet('color: green; font-weight: bold;')
             pump_info_label.setObjectName('device_info')
-            layout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
+            errorLayout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
 
+        layout.addLayout(errorLayout)
         #---------------------------------------------------------#
 
         # Window Action Items
