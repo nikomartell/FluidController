@@ -1,5 +1,5 @@
 import sys
-from PumpCon import PumpCon
+from Controller import Controller
 from ControlCenter import controlCenter
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
 from PyQt6.QtCore import Qt
@@ -9,7 +9,7 @@ import csv
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.device = PumpCon(9600)
+        self.device = Controller()
         self.initUI(self.device)
         
 
@@ -98,7 +98,7 @@ class App(QWidget):
 
 
     def refresh_device_connection(self):
-        self.device = PumpCon(9600)
+        self.device = Controller()
         self.initUI(self.device)
         
     def store_commands_to_csv(self):

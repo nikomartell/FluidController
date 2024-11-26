@@ -3,7 +3,7 @@ import serial.tools.list_ports
 from PyQt6.QtWidgets import QMessageBox
 
 class Scale:
-    def __init__(self, ser, baudrate):
+    def __init__(self, ser, baudrate=9600):
         self.name = None
         self.port = None
         self.ser = None

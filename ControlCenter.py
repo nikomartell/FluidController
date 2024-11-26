@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtCore import QTimer, Qt
 from calcs import setComponent, setFlowRate, setStrokes, setAcceleration, setFlowDirection, setDuration, setIterations
+from CommandSet import CommandSet
 
 class controlCenter(QWidget):
     def __init__(self, controller):
@@ -93,7 +94,7 @@ class controlCenter(QWidget):
         # Flow Direction
         flowDirectionLabel = QLabel('Flow Direction:', self.Container)
         self.flowDirection = QComboBox()
-        self.flowDirection.addItems(['Dispense', 'Extract'])
+        self.flowDirection.addItems(['Dispense', 'Aspirate'])
 
         flowDirectionLayout = QVBoxLayout()
         flowDirectionLayout.addWidget(flowDirectionLabel, alignment=Qt.AlignmentFlag.AlignTop)
@@ -167,17 +168,18 @@ class controlCenter(QWidget):
         durationCom = setDuration(self.duration.text())
         iterationsCom = setIterations(self.iterations.text())
         
-        commands = [componentCom, flowRateCom, strokesCom, accelerationCom, flowDirectionCom, durationCom, iterationsCom]
+        commands = CommandSet(componentCom, flowRateCom, strokesCom, accelerationCom, 
+                              flowDirectionCom, durationCom, iterationsCom)
             
         return commands
         
-    def set_commands(self, commands):
-        self.component.setCurrentText(commands[0])
-        self.flowRate.setText(commands[1])
-        self.strokes.setText(commands[2])
-        self.acceleration.setText(commands[3])
-        self.flowDirection.setCurrentText(commands[4])
-        self.duration.setText(commands[5])
-        self.iterations.setText(commands[6])
+    def set_commands(self, commandSet):
+        self.component.setCurrentText(commandSet.component)
+        self.flowRate.setText(commandSet.flowRate)
+        self.strokes.setText(commandSet.strokes)
+        self.acceleration.setText(commandSet.acceleration)
+        self.flowDirection.setCurrentText(commandSet.flowDirection)
+        self.duration.setText(commandSet.duration)
+        self.iterations.setText(commandSet.iterations)
         
         

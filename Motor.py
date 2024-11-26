@@ -1,42 +1,85 @@
-import serial
-import serial.tools.list_ports
+import pytrinamic
+from pytrinamic.connections import ConnectionManager
+from pytrinamic.modules import TMCM1140
 from PyQt6.QtWidgets import QMessageBox
+import time
 
-class Motor:
-    def __init__(self, ser, baudrate):
-        self.name = None
+class LinearMotor:
+    def __init__(self):
         self.port = None
-        self.ser = None
-        ports = serial.tools.list_ports.comports()
-        for port in ports:
-            if ser in port.hwid:
-                try:
-                    self.name = port.description
-                    self.ser = serial.Serial(port.device, baudrate)
-                    self.port = port
-                    break
-                except serial.SerialException as e:
-                    self.ser = None
-                    QMessageBox.critical(None, 'Error', f'Could not open port {port.device}: {e}')
-        if self.ser is None:
-            return self.ser
-
-    def send_command(self, command): 
-        if self.ser:
-            if not isinstance(command, str):
-                command = str(command)
-            self.ser.write(command.encode())
-        else:
-            raise Exception("Serial port not initialized")
-
-    def read_response(self):
-        if self.ser:
-            return self.ser.readline().decode()
-        else:
-            raise Exception("Serial port not initialized")
+        self.connection = None
+        self.module = None
+        self.motor = None
         
-    def send_binary_command(self, command):
-        self.ser.write(command.to_bytes(1, byteorder='big'))
+
+        try:
+            interface = ConnectionManager().connect()
+            self.module = TMCM1140(interface)
+            self.motor = self.module.motors[0]
+        except Exception as e:
+            self.connection = None
+        if self.connection is None:
+            return self.connection
+
+        self.motor.drive_settings.max_current = 1000
+        self.motor.drive_settings.standby_current = 0
+        self.motor.drive_settings.boost_current = 0
+        self.motor.drive_settings.microstep_resolution = self.motor.ENUM.MicrostepResolution256Microsteps
         
-    def enter_ascii_mode(self):
-        self.send_binary_command(139)
+    def execute(self, commandSet):
+        # Check if the motor is connected
+        if not self.connection:
+            QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
+            return
+        
+        self.motor.move_to(0)
+        self.motor.rotate(commandSet.strokes)
+        # 
+        time.sleep(1)
+        
+        
+class RotaryMotor:
+    def __init__(self):
+        self.port = None
+        self.connection = None
+        self.module = None
+        self.motor = None
+        
+
+        try:
+            interface = ConnectionManager().connect()
+            self.module = TMCM1140(interface)
+            self.motor = self.module.motors[1]
+        except Exception as e:
+            self.connection = None
+        if self.connection is None:
+            return self.connection
+
+        self.motor.drive_settings.max_current = 1000
+        self.motor.drive_settings.standby_current = 0
+        self.motor.drive_settings.boost_current = 0
+        self.motor.drive_settings.microstep_resolution = self.motor.ENUM.MicrostepResolution256Microsteps
+        self.motor.linear_ramp.max_acceleration = 1000
+        self.motor.linear_ramp.max_velocity = 1000
+
+    def execute(self, commandSet):
+        # Check if the motor is connected
+        if not self.connection:
+            QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
+            return
+        
+        # Move the motor to Default position
+        self.motor.move_to(0)
+        while not self.motor.get_position_reached():
+            time.sleep(0.2)
+        
+        # Rotate the motor for flow rate at specified duration.
+        if commandSet.flowDirection == 'Dispense':
+            self.motor.rotate(commandSet.flowrate)
+        elif commandSet.flowDirection == 'Aspirate':
+            self.motor.rotate(-commandSet.flowrate)
+        time.sleep(commandSet.duration)
+        
+        # Stop the motor
+        self.motor.stop()
+        
