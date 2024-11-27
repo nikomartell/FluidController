@@ -10,8 +10,12 @@ from Motor import Motor
         
 class Controller:
     def __init__(self):
-        interface1 = ConnectionManager("--interface serial_tmcl --port /dev/cu.usbserial-FTDN6FIV --data-rate 9600").connect()
-        interface2 = ConnectionManager("--interface serial_tmcl --port /dev/cu.usbserial-FTDN6M3B --data-rate 9600").connect()
+        try: 
+            interface1 = ConnectionManager().connect()
+            interface2 = ConnectionManager().connect()
+        except Exception as e:
+            interface1 = None
+            interface2 = None
         self.name = 'Pump Controller' 
         self.linearMotor = Motor(interface1)
         self.rotaryMotor = Motor(interface2)
