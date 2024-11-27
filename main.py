@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 import csv
-https://prod.liveshare.vsengsaas.visualstudio.com/join?8CD9D8E1C6E29AD399723A1A682EA4F96997
+
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -95,7 +95,6 @@ class App(QWidget):
     
     # Methods
     def execute(self):
-        
         commands = self.deviceControl.get_commands()
         self.device.send_commands(commands)
 

@@ -1,24 +1,29 @@
 import os
 import serial
 import serial.tools.list_ports
+import pytrinamic
+from pytrinamic.connections import ConnectionManager
+from pytrinamic.modules import TMCM1140
 from PyQt6.QtWidgets import QMessageBox
 from Scale import Scale
 from Motor import Motor
         
 class Controller:
     def __init__(self):
-        self.name = 'Pump Controller'
-        self.linearMotor = Motor()
-        self.rotaryMotor = Motor()
-        self.scale = Scale('FTDN6FIV')
+        interface1 = ConnectionManager("--interface serial_tmcl --port /dev/cu.usbserial-FTDN6FIV --data-rate 9600").connect()
+        interface2 = ConnectionManager("--interface serial_tmcl --port /dev/cu.usbserial-FTDN6M3B --data-rate 9600").connect()
+        self.name = 'Pump Controller' 
+        self.linearMotor = Motor(interface1)
+        self.rotaryMotor = Motor(interface2)
+        self.scale = Scale('peepee')
         self.errors = [None, None, None]
         self.stagedCommands = ''
         self.reply = None
     
-        if not self.linearMotor.connection:
+        if not interface1:
             self.linearMotor = None
             self.errors[0] = 'Linear Motor not found '
-        if not self.rotaryMotor.connection:
+        if not interface2:
             self.rotaryMotor = None
             self.errors[1] = 'Rotary Motor not found '
         if not self.scale.ser:

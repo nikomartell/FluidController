@@ -37,7 +37,6 @@ class Scale:
         if self.ser:
             self.ser.write('W'.encode())
             weightBin = self.read_response()
-            print(weightBin)
             weight = self.parse_weight(weightBin)
             return weight
         

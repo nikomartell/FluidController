@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QComboBox, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtCore import QTimer, Qt
-from calcs import setComponent, setFlowRate, setStrokes, setAcceleration, setFlowDirection, setDuration, setIterations
 from CommandSet import CommandSet
 
 class controlCenter(QWidget):
@@ -160,13 +159,13 @@ class controlCenter(QWidget):
         # Send Commands from text boxes to device
     def get_commands(self):
         # Functions used for each variable translates input to commands
-        componentCom = setComponent(self.component.currentText())
-        flowRateCom = setFlowRate(self.flowRate.text())
-        strokesCom = setStrokes(self.strokes.text())
-        accelerationCom = setAcceleration(self.acceleration.text())
-        flowDirectionCom = setFlowDirection(self.flowDirection.currentText())
-        durationCom = setDuration(self.duration.text())
-        iterationsCom = setIterations(self.iterations.text())
+        componentCom = self.component.currentText()
+        flowRateCom = self.flowRate.text()
+        strokesCom = self.strokes.text()
+        accelerationCom = self.acceleration.text()
+        flowDirectionCom = self.flowDirection.currentText()
+        durationCom = self.duration.text()
+        iterationsCom = self.iterations.text()
         
         commands = CommandSet(componentCom, flowRateCom, strokesCom, accelerationCom, 
                               flowDirectionCom, durationCom, iterationsCom)
