@@ -14,16 +14,18 @@ import time
 pytrinamic.show_info()
 
 # for serial interface
-with ConnectionManager("--interface serial_tmcl --port COM6 --data-rate 115200").connect() as my_interface:
+with ConnectionManager().connect() as my_interface:
 # for usb interface
 
     print(my_interface)
+    
     module = TMCM1140(my_interface)
     motor = module.motors[0]
-
     # The configuration is based on our PD42-1-1140-TMCL
     # If you use a different motor be sure you have the right configuration setup otherwise the script may not working.
-
+    
+    print(motor.drive_settings)
+    
     print("Preparing parameters...")
 
     # preparing drive settings
