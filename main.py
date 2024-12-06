@@ -1,4 +1,5 @@
 import sys
+import serial
 from Controller import Controller
 from ControlCenter import controlCenter
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
@@ -7,12 +8,23 @@ from PyQt6.QtGui import QAction
 import csv
 
 class App(QWidget):
-    def __init__(self):
+    def __init__(self):        
         super().__init__()
-        self.device = Controller()
+        self.find_controller()
         self.initUI(self.device)
         
-
+    def find_controller(self):
+        try:
+            ports = list(serial.tools.list_ports.comports())
+            for port in ports:
+                if 'Controller' in port.description:
+                    self.device = port.device
+                    break
+            else:
+                self.device = None
+        except Exception as e:
+            self.device = None
+    
     def initUI(self, device):
         
         # Stylesheet
@@ -25,17 +37,23 @@ class App(QWidget):
         
         errorLayout = QHBoxLayout()
         errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        for error in device.errors:
-            if error is not None:
-                error_label = QLabel(error, self)
-                error_label.setStyleSheet('color: red; font-weight: bold;')
-                error_label.setObjectName('device_info')
-                errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
         if device is not None:
             pump_info_label = QLabel(f'Device: {self.device.name}', self)
             pump_info_label.setStyleSheet('color: green; font-weight: bold;')
             pump_info_label.setObjectName('device_info')
             errorLayout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
+            for error in device.errors:
+                if error is not None:
+                    error_label = QLabel(error, self)
+                    error_label.setStyleSheet('color: red; font-weight: bold;')
+                    error_label.setObjectName('device_info')
+                    errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
+            
+        if not self.device:
+            error_label = QLabel('Device not found', self)
+            error_label.setStyleSheet('color: red; font-weight: bold;')
+            error_label.setObjectName('device_info')
+            errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
 
         layout.addLayout(errorLayout)
         #---------------------------------------------------------#
@@ -73,7 +91,7 @@ class App(QWidget):
         # Device Control Center
         control_layout = QHBoxLayout()
         self.deviceControl = controlCenter(device)
-        control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignCenter)
+        control_layout.addWidget(self.deviceControl.Container)
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -95,6 +113,9 @@ class App(QWidget):
     
     # Methods
     def execute(self):
+        if self.device is None:
+            QMessageBox.critical(self, 'Error', 'Device not found')
+            return
         commands = self.deviceControl.get_commands()
         self.device.send_commands(commands)
 

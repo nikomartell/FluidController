@@ -130,14 +130,18 @@ class controlCenter(QWidget):
         def update_weight():
             
             # This function should interact with the controller to get the current weight
-            if controller.scale is not None:
+            
+            if controller is not None and controller.scale is not None:
                 self.scaleData = controller.scale.get_weight()
             else:
-                self.scaleData = "Scale not found"
+                if not controller:
+                    self.scaleData = "Controller not found"
+                elif controller.scale is None:
+                    self.scaleData = "Scale not found"
             weightLabel.setText(self.scaleData)
         weightLabel = QLabel('', self.Container)
         weightLabel.setObjectName('weight')
-        weight_layout.addWidget(weightLabel, alignment=Qt.AlignmentFlag.AlignCenter)
+        weight_layout.addWidget(weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
         timer = QTimer(self.Container)
         timer.timeout.connect(update_weight)
         timer.start(1000)  # Update every second

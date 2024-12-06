@@ -10,6 +10,7 @@ from Motor import Motor
         
 class Controller:
     def __init__(self):
+        
         try: 
             interface1 = ConnectionManager().connect()
             interface2 = ConnectionManager().connect()
@@ -19,7 +20,7 @@ class Controller:
         self.name = 'Pump Controller' 
         self.linearMotor = Motor(interface1)
         self.rotaryMotor = Motor(interface2)
-        self.scale = Scale('peepee')
+        self.scale = Scale('COM4')
         self.errors = [None, None, None]
         self.stagedCommands = ''
         self.reply = None
