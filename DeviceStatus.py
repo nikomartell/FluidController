@@ -1,5 +1,5 @@
 import sys
-from PumpCon import PumpCon
+from Controller import Controller
 from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel
 
 def device_status(device):
