@@ -50,7 +50,7 @@ class App(QWidget):
                     errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
             
         if not self.device:
-            error_label = QLabel('Device not found', self)
+            error_label = QLabel('Controller not found', self)
             error_label.setStyleSheet('color: red; font-weight: bold;')
             error_label.setObjectName('device_info')
             errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
@@ -114,7 +114,7 @@ class App(QWidget):
     # Methods
     def execute(self):
         if self.device is None:
-            QMessageBox.critical(self, 'Error', 'Device not found')
+            QMessageBox.critical(self, 'Error', 'Controller not found')
             return
         commands = self.deviceControl.get_commands()
         self.device.send_commands(commands)
