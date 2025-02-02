@@ -1,6 +1,6 @@
 import pytrinamic
 from pytrinamic.connections import ConnectionManager
-from pytrinamic.modules import TMCM1140
+from pytrinamic.modules import TMCM3110
 from PyQt6.QtWidgets import QMessageBox
 import time
 
@@ -11,7 +11,7 @@ class Motor:
         self.motor = None
         
         try:
-            self.module = TMCM1140(interface)
+            self.module = TMCM3110(interface)
             self.motor = self.module.motors[0]
         except Exception as e:
             self.module = None
@@ -26,20 +26,24 @@ class Motor:
             return 0        # Return 0 if no execution
         
         # Move the motor to Default position
-        while int(commandSet.iterations) > 0:
-            self.motor.move_to(0)
-            while not self.motor.get_position_reached():
-                time.sleep(0.2)
+        try:
+            while int(commandSet.iterations) > 0:
+                self.motor.move_to(0)
+                while not self.motor.get_position_reached():
+                    time.sleep(0.2)
 
-            # Rotate the motor for flow rate at specified duration.
-            if commandSet.flowDirection == 'Dispense':
-                self.motor.rotate(commandSet.flowrate)
-            elif commandSet.flowDirection == 'Aspirate':
-                self.motor.rotate(-commandSet.flowrate)
-            time.sleep(commandSet.duration)
-            
-            # Stop the motor
-            self.motor.stop()
-            commandSet.iterations -= 1
-        return 1            # Return 1 if execution is successful
+                # Rotate the motor for flow rate at specified duration.
+                if commandSet.flowDirection == 'Dispense':
+                    self.motor.rotate(commandSet.flowrate)
+                elif commandSet.flowDirection == 'Aspirate':
+                    self.motor.rotate(-commandSet.flowrate)
+                time.sleep(commandSet.duration)
+                
+                # Stop the motor
+                self.motor.stop()
+                commandSet.iterations -= 1
+            return 1            # Return 1 if execution is successful
+        except Exception as e:
+            QMessageBox.critical(None, 'Error', f'Error: {e}')
+            return 0            # Return 0 if execution fails
         

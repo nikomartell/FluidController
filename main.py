@@ -14,16 +14,7 @@ class App(QWidget):
         self.initUI(self.device)
         
     def find_controller(self):
-        try:
-            ports = list(serial.tools.list_ports.comports())
-            for port in ports:
-                if 'Controller' in port.description:
-                    self.device = port.device
-                    break
-            else:
-                self.device = None
-        except Exception as e:
-            self.device = None
+        self.device = Controller()
     
     def initUI(self, device):
         
@@ -38,7 +29,7 @@ class App(QWidget):
         errorLayout = QHBoxLayout()
         errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         if device is not None:
-            pump_info_label = QLabel(f'Device: {self.device.name}', self)
+            pump_info_label = QLabel(f'Component Status:', self)
             pump_info_label.setStyleSheet('color: green; font-weight: bold;')
             pump_info_label.setObjectName('device_info')
             errorLayout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
