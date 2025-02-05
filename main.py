@@ -3,7 +3,7 @@ import serial
 from Controller import Controller
 from ControlCenter import controlCenter
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtGui import QAction
 import csv
 
@@ -90,18 +90,17 @@ class App(QWidget):
         self.refresh_button = QPushButton('Refresh Device Connection', self)
         self.refresh_button.clicked.connect(self.refresh_device_connection)
         button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        
         self.send_commands_button = QPushButton('Send Commands', self)
-        self.send_commands_button.setText('Execute')
-        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
-        self.send_commands_button.clicked.disconnect()
-        self.send_commands_button.clicked.connect(self.execute)
-            
-        if self.device is not None and self.device.status == 1:
-            self.send_commands_button.setText('Stop Commands')
+        
+        try:
+            self.send_commands_button.clicked.disconnect
+            self.send_commands_button.clicked.connect(self.execute())
+            self.send_commands_button.setText('Execute')
+            self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+        except Exception as e:
+            self.send_commands_button.setText('No Device Found')
             self.send_commands_button.setStyleSheet('background-color: red;')
-            self.send_commands_button.clicked.disconnect()
-            self.send_commands_button.clicked.connect(self.device.stop())
+
             
         button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
         
@@ -114,11 +113,20 @@ class App(QWidget):
     
     # Methods
     def execute(self):
-        if self.device is None:
-            QMessageBox.critical(self, 'Error', 'Controller not found')
+        try:
+            if self.device is None:
+                return
+            else:
+                commands = self.deviceControl.get_commands()
+                self.device.send_commands(commands)
+                while self.device.motors.thread.is_running:
+                    self.send_commands_button.setText('Stop Commands')
+                    self.send_commands_button.setStyleSheet('background-color: red;')
+                    self.send_commands_button.clicked.disconnect
+                    self.send_commands_button.clicked.connect(self.device.stop())
+                    
+        except Exception as e:
             return
-        commands = self.deviceControl.get_commands()
-        self.device.send_commands(commands)
 
 
     def refresh_device_connection(self):

@@ -12,17 +12,22 @@ class MotorThread(QThread):
         self._is_running = True
 
     def run(self):
-        # Move the motor to Default position
         try:
             while self._is_running:
-                # Rotate the motor at the set flow rate for the specified duration.
-                if self.command_set.flowDirection == 'Dispense':
-                    self.motor.rotate(self.command_set.flowRate)
-                elif self.command_set.flowDirection == 'Aspirate':
-                    self.motor.rotate(-self.command_set.flowRate)
-                time.sleep(self.command_set.duration)
-                self.motor.stop()
-                break
+                
+                while self.command_set.iterations > 0:      # Run the command set for the specified number of iterations
+                    if self.command_set.flowDirection == 'Dispense':
+                        self.motor.rotate(self.command_set.flowRate)
+                    elif self.command_set.flowDirection == 'Aspirate':
+                        self.motor.rotate(-self.command_set.flowRate)
+                    time.sleep(self.command_set.duration)   # Run for the specified duration
+                    
+                    self.motor.stop()   # Stop the motor for 3 seconds before starting the next iteration
+                    time.sleep(3)
+                    
+                    self.command_set.iterations -= 1
+                    if self.command_set.iterations == 0:
+                        break
         except Exception as e:
             print(f'Error: {e}')
         self.finished.emit()

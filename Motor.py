@@ -2,7 +2,6 @@ import pytrinamic
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QThread, pyqtSignal
 import time
 from MotorThread import MotorThread
 
@@ -18,19 +17,14 @@ class Motor:
 
         
     def execute(self, commandSet):
-        # Check if the motor is connected
-        if not self.motor:
-            QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
-            return 0        # Return 0 if no execution
         
         # Move the motor to Default position
         try:
             # Run the command set for the specified number of iterations
-            while commandSet.iterations > 0:
-                commandSet.iterations -= 1
-                thread = MotorThread(interface=self.motor, command_set=commandSet)
-                thread.finished.connect(lambda: print("Thread finished"))
-                thread.start()
+            
+            thread = MotorThread(interface=self.motor, command_set=commandSet)
+            thread.finished.connect(lambda: print("Thread finished"))
+            thread.start()
             
             self.motor.stop()
                 
