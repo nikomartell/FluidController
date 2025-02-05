@@ -106,7 +106,7 @@ class controlCenter(QWidget):
         durationLabel = QLabel('Duration (Seconds):', self.Container)
         self.duration = QLineEdit()
         self.duration.setPlaceholderText('Default: 10.0')
-        self.duration.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        self.duration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         durationLayout = QVBoxLayout()
         durationLayout.addWidget(durationLabel, alignment=Qt.AlignmentFlag.AlignTop)
@@ -116,7 +116,7 @@ class controlCenter(QWidget):
         # Iterations
         iterationsLabel = QLabel('Iterations:', self.Container)
         self.iterations = QLineEdit()
-        self.iterations.setPlaceholderText('Default: 10')
+        self.iterations.setPlaceholderText('Default: 1')
         self.iterations.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only numbers with up to 0 decimal places
         
         iterationsLayout = QVBoxLayout()

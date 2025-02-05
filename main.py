@@ -92,7 +92,17 @@ class App(QWidget):
         button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
         self.send_commands_button = QPushButton('Send Commands', self)
+        self.send_commands_button.setText('Execute')
+        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+        self.send_commands_button.clicked.disconnect()
         self.send_commands_button.clicked.connect(self.execute)
+            
+        if self.device is not None and self.device.status == 1:
+            self.send_commands_button.setText('Stop Commands')
+            self.send_commands_button.setStyleSheet('background-color: red;')
+            self.send_commands_button.clicked.disconnect()
+            self.send_commands_button.clicked.connect(self.device.stop())
+            
         button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         layout.addLayout(control_layout)

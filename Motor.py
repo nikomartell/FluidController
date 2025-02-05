@@ -2,47 +2,46 @@ import pytrinamic
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtCore import QThread, pyqtSignal
 import time
+from MotorThread import MotorThread
 
 class Motor:
     def __init__(self, interface):
-        self.port = None
-        self.module = None
         self.motor = None
+        self.thread = None
         
         try:
-            self.module = TMCM3110(interface)
-            self.motor = self.module.motors[0]
+            self.motor = interface
         except Exception as e:
-            self.module = None
-        if self.module is None:
-            return self.module
+            self.motor = None
 
         
     def execute(self, commandSet):
         # Check if the motor is connected
-        if not self.module:
+        if not self.motor:
             QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
             return 0        # Return 0 if no execution
         
         # Move the motor to Default position
         try:
-            while int(commandSet.iterations) > 0:
-                self.motor.move_to(0)
-                while not self.motor.get_position_reached():
-                    time.sleep(0.2)
-
-                # Rotate the motor for flow rate at specified duration.
-                if commandSet.flowDirection == 'Dispense':
-                    self.motor.rotate(commandSet.flowrate)
-                elif commandSet.flowDirection == 'Aspirate':
-                    self.motor.rotate(-commandSet.flowrate)
-                time.sleep(commandSet.duration)
-                
-                # Stop the motor
-                self.motor.stop()
+            # Run the command set for the specified number of iterations
+            while commandSet.iterations > 0:
                 commandSet.iterations -= 1
-            return 1            # Return 1 if execution is successful
+                thread = MotorThread(interface=self.motor, command_set=commandSet)
+                thread.finished.connect(lambda: print("Thread finished"))
+                thread.start()
+            
+            self.motor.stop()
+                
+            if commandSet.iterations == 0:
+                QMessageBox.information(None, 'Success', 'Motor executed successfully')
+                return 1            # Return 1 if execution
+            else:
+                QMessageBox.critical(None, 'Error', 'Motor execution interrupted')
+                return 2            # Return 2 if execution is interrupted
+            
+
         except Exception as e:
             QMessageBox.critical(None, 'Error', f'Error: {e}')
             return 0            # Return 0 if execution fails
