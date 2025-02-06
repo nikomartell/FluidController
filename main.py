@@ -2,6 +2,7 @@ import sys
 import serial
 from Controller import Controller
 from ControlCenter import controlCenter
+from Analysis import analysis_widget
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
 from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtGui import QAction
@@ -87,9 +88,9 @@ class App(QWidget):
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
         
-        self.refresh_button = QPushButton('Refresh Device Connection', self)
-        self.refresh_button.clicked.connect(self.refresh_device_connection)
-        button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        refresh_button = QPushButton('Refresh Device Connection', self)
+        refresh_button.clicked.connect(self.refresh_device_connection)
+        button_layout.addWidget(refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.send_commands_button = QPushButton('Send Commands', self)
         
         try:
@@ -108,6 +109,11 @@ class App(QWidget):
         layout.addLayout(button_layout)
 
         self.setLayout(layout)
+    
+    #---------------------------------------------------------#
+    
+    analysis_layout = QHBoxLayout()
+    
     
     #---------------------------------------------------------#
     

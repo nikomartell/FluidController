@@ -24,7 +24,14 @@ class Motor:
             
             thread = MotorThread(interface=self.motor, command_set=commandSet)
             thread.finished.connect(lambda: print("Thread finished"))
-            thread.start()
+            try:
+                thread.start()
+            except (KeyboardInterrupt, SystemExit):
+                thread.stop()
+                thread.wait()
+                thread.finished.emit()
+                return 0
+            
             
             self.motor.stop()
                 
