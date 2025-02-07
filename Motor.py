@@ -13,6 +13,12 @@ class Motor:
         
         try:
             self.motor = interface
+            self.motor.max_acceleration = 1000
+            self.motor.max_velocity = 1000
+            self.motor.drive_settings.max_current = 128
+            self.motor.drive_settings.standby_current = 0
+            self.motor.drive_settings.boost_current = 0
+            self.motor.drive_settings.microstep_resolution = self.motor.ENUM.microstep_resolution_256_microsteps
         except Exception as e:
             self.motor = None
 
@@ -26,22 +32,11 @@ class Motor:
         # Move the motor to Default position
         try:
             # Run the command set for the specified number of iterations
-            while commandSet.iterations > 0:
-                commandSet.iterations -= 1
-                thread = MotorThread(interface=self.motor, command_set=commandSet)
-                thread.finished.connect(lambda: print("Thread finished"))
-                thread.start()
-            
-            self.motor.stop()
-                
-            if commandSet.iterations == 0:
-                QMessageBox.information(None, 'Success', 'Motor executed successfully')
-                return 1            # Return 1 if execution
-            else:
-                QMessageBox.critical(None, 'Error', 'Motor execution interrupted')
-                return 2            # Return 2 if execution is interrupted
-            
 
+            thread = MotorThread(interface=self.motor, command_set=commandSet)
+            thread.finished.connect(lambda: print("Thread finished"))
+            thread.start()
+            
         except Exception as e:
             QMessageBox.critical(None, 'Error', f'Error: {e}')
             return 0            # Return 0 if execution fails

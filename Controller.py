@@ -36,21 +36,25 @@ class Controller:
     # Sends commands to respective component (Linear Motor or Rotary Motor). One component used at a time
     def send_commands(self, commands):
         self.status = 1
+        print(self.rotary.motor.drive_settings)
         # Choose the correct device to send commands to
-        match commands.component:
-            case 'Linear Motor':
-                if self.linear is not None:
-                    self.linear.execute(commands)
-                else:
-                    QMessageBox.critical(None, 'Error', 'Linear Motor not found')
-            case 'Rotary Motor':
-                if self.rotary is not None:
-                    self.rotary.execute(commands)
-                else:
-                    QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
-            case _:
-                QMessageBox.critical(None, 'Error', 'Invalid component specified')
-        
+        try:
+            match commands.component:
+                case 'Linear Motor':
+                    if self.linear is not None:
+                        self.linear.execute(commands)
+                    else:
+                        QMessageBox.critical(None, 'Error', 'Linear Motor not found')
+                case 'Rotary Motor':
+                    if self.rotary is not None:
+                        self.rotary.execute(commands)
+                    else:
+                        QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
+                case _:
+                    QMessageBox.critical(None, 'Error', 'Invalid component specified')
+        except Exception as e:
+            QMessageBox.critical(None, 'Error', f'Error: {e}')
+            self.status = 0
         self.status = 0
     
     def stop(self):
