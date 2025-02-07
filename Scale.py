@@ -8,22 +8,18 @@ class Scale:
         self.port = None
         self.ser = None
         ports = serial.tools.list_ports.comports()
-        try:
-            for port in ports:
-                if ser in port.hwid:
-                    try:
-                        self.name = port.description
-                        self.ser = serial.Serial(port.device, baudrate, timeout=.1)
-                        self.port = port
-                        break
-                    except serial.SerialException as e:
-                        self.ser = None
-                        QMessageBox.critical(None, 'Error', f'Could not open port {port.device}: {e}')
-            if self.ser is None:
-                return self.ser
-        except Exception as e:
-            print(e)
-            return
+        for port in ports:
+            if ser in port.hwid:
+                try:
+                    self.name = port.description
+                    self.ser = serial.Serial(port.device, baudrate, timeout=.1)
+                    self.port = port
+                    break
+                except serial.SerialException as e:
+                    self.ser = None
+                    QMessageBox.critical(None, 'Error', f'Could not open port {port.device}: {e}')
+        if self.ser is None:
+            return self.ser
 
     def send_command(self, command):
         if self.ser:

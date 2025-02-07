@@ -139,12 +139,12 @@ class controlCenter(QWidget):
                 elif controller.scale is None:
                     self.scaleData = "Scale not found"
             weightLabel.setText(self.scaleData)
-        weightLabel = QLabel('', self.Container)
+        
+        weightLabel = QLabel('0.00', self.Container)
         weightLabel.setObjectName('weight')
         weight_layout.addWidget(weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
         timer = QTimer(self.Container)
         timer.timeout.connect(update_weight)
-        timer.start(1000)  # Update every second
         
         tareScale = QPushButton('Tare Scale', self.Container)
         tareScale.setObjectName('tare')

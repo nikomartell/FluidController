@@ -2,22 +2,20 @@ import sys
 import serial
 from Controller import Controller
 from ControlCenter import controlCenter
-from Analysis import analysis_widget
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
-from PyQt6.QtCore import Qt, QThread
+from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtGui import QAction
+from ConnectionThread import ConnectionThread
 import csv
 
 class App(QWidget):
     def __init__(self):        
         super().__init__()
         self.find_controller()
-        self.initUI(self.device)
-        
-    def find_controller(self):
-        self.device = Controller()
+        self.initUI()
     
-    def initUI(self, device):
+    def initUI(self):
+        
         
         # Stylesheet
         with open("main.css", "r") as file:
@@ -25,29 +23,13 @@ class App(QWidget):
         
         # Setup
         self.setWindowTitle('Fluidics Device Controller')
-        layout = QVBoxLayout()
+        self.layout = QVBoxLayout()
+        # Multithreading
+        self.threadpool = QThreadPool()
+        connections = ConnectionThread(self.find_controller())
+        self.threadpool.start(connections)
         
-        errorLayout = QHBoxLayout()
-        errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        if device is not None:
-            pump_info_label = QLabel(f'Component Status:', self)
-            pump_info_label.setStyleSheet('color: green; font-weight: bold;')
-            pump_info_label.setObjectName('device_info')
-            errorLayout.addWidget(pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
-            for error in device.errors:
-                if error is not None:
-                    error_label = QLabel(error, self)
-                    error_label.setStyleSheet('color: red; font-weight: bold;')
-                    error_label.setObjectName('device_info')
-                    errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
-            
-        if not device:
-            error_label = QLabel('Controller not found', self)
-            error_label.setStyleSheet('color: red; font-weight: bold;')
-            error_label.setObjectName('device_info')
-            errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
-
-        layout.addLayout(errorLayout)
+        self.layout.addLayout(self.errorLayout)
         #---------------------------------------------------------#
 
         # Window Action Items
@@ -75,71 +57,77 @@ class App(QWidget):
         
         #Help Menu
         help_menu = menubar.addMenu('Help')
-        layout.setMenuBar(menubar)
+        self.layout.setMenuBar(menubar)
         help_action = QAction('Help', self)
         help_menu.addAction(help_action)
         #---------------------------------------------------------#
         
         # Device Control Center
         control_layout = QHBoxLayout()
-        self.deviceControl = controlCenter(device)
+        self.deviceControl = controlCenter(self.device)
         control_layout.addWidget(self.deviceControl.Container)
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
         
-        refresh_button = QPushButton('Refresh Device Connection', self)
-        refresh_button.clicked.connect(self.refresh_device_connection)
-        button_layout.addWidget(refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.send_commands_button = QPushButton('Send Commands', self)
+        self.refresh_button = QPushButton('Refresh Device Connection', self)
+        self.refresh_button.clicked.connect(self.refresh_device_connection)
+        button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
-        try:
-            if self.device.module is not None:
-                self.send_commands_button.clicked.disconnect
-                self.send_commands_button.clicked.connect(self.execute)
-                self.send_commands_button.setText('Execute')
-                self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
-            else:
-                self.send_commands_button.setText('No Device Found')
-                self.send_commands_button.setStyleSheet('background-color: red;')
-        except Exception as e:
-            print(e)
-
+        self.send_commands_button = QPushButton('Send Commands', self)
+        self.send_commands_button.setText('Execute')
+        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+        self.send_commands_button.clicked.connect(self.execute)
+        
+        if self.device.module is None:
+            self.send_commands_button.setEnabled(False)
+            self.send_commands_button.setStyleSheet('background-color: red;')
+            self.send_commands_button.setToolTip('Controller not found')
+            self.send_commands_button.setText('Controller not found')
             
         button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
         
-        layout.addLayout(control_layout)
-        layout.addLayout(button_layout)
+        self.layout.addLayout(control_layout)
+        self.layout.addLayout(button_layout)
 
-        self.setLayout(layout)
-    
-    #---------------------------------------------------------#
-    
-    analysis_layout = QHBoxLayout()
-    
+        self.setLayout(self.layout)
     
     #---------------------------------------------------------#
     
     # Methods
+    def find_controller(self):
+        self.device = Controller()
+        self.errorLayout = QHBoxLayout()
+        self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        if self.device is not None:
+            self.pump_info_label = QLabel(f'Component Status:', self)
+            self.pump_info_label.setStyleSheet('color: green; font-weight: bold;')
+            self.pump_info_label.setObjectName('device_info')
+            self.errorLayout.addWidget(self.pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
+            for error in self.device.errors:
+                if error is not None:
+                    self.error_label = QLabel(error, self)
+                    self.error_label.setStyleSheet('color: red; font-weight: bold;')
+                    self.error_label.setObjectName('device_info')
+                    self.errorLayout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignTop)
+            
+        if not self.device:
+            error_label = QLabel('Controller not found', self)
+            error_label.setStyleSheet('color: red; font-weight: bold;')
+            error_label.setObjectName('device_info')
+            self.errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
+    
     def execute(self):
-        try:
-            commands = self.deviceControl.get_commands()
-            self.device.send_commands(commands)
-            while self.device.motors.thread._is_running:
-                self.send_commands_button.setText('Stop Commands')
-                self.send_commands_button.setStyleSheet('background-color: red;')
-                self.send_commands_button.clicked.disconnect
-                self.send_commands_button.clicked.connect(self.device.stop)
-                    
-        except Exception as e:
-            print(e)
+        if self.device is None:
+            QMessageBox.critical(self, 'Error', 'Controller not found')
             return
+        commands = self.deviceControl.get_commands()
+        self.device.send_commands(commands)
 
 
     def refresh_device_connection(self):
         self.device = Controller()
         self.initUI(self.device)
-        
         
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
@@ -150,7 +138,6 @@ class App(QWidget):
                 for command in commands:
                     command_writer.writerow([command])
             QMessageBox.information(self, 'Success', f'Commands saved to {file_name}')
-
 
     def import_commands_from_csv(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Import Commands from CSV", "", "CSV Files (*.csv);;All Files (*)")
