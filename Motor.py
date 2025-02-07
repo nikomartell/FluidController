@@ -7,13 +7,10 @@ from MotorThread import MotorThread
 
 class Motor:
     def __init__(self, interface):
-        self.motor = None
+        self.module = interface
         self.thread = None
-        
-        try:
-            self.motor = interface
-        except Exception as e:
-            self.motor = None
+        self.rotary = self.module[0] if self.module[0] else None
+        self.linear = self.module[1] if self.module[1] else None
 
         
     def execute(self, commandSet):
@@ -21,29 +18,21 @@ class Motor:
         # Move the motor to Default position
         try:
             # Run the command set for the specified number of iterations
-            
-            thread = MotorThread(interface=self.motor, command_set=commandSet)
-            thread.finished.connect(lambda: print("Thread finished"))
+            print(self.rotary.drive_settings)
+            print(self.linear.drive_settings)
+            self.thread = MotorThread(self.rotary, self. linear, commandSet)
+            self.thread.finished.connect(lambda: print("Thread finished"))
             try:
-                thread.start()
+                self.thread.start()
+                while self.thread._is_running:
+                    time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
-                thread.stop()
-                thread.wait()
-                thread.finished.emit()
-                return 0
-            
-            
-            self.motor.stop()
-                
-            if commandSet.iterations == 0:
-                QMessageBox.information(None, 'Success', 'Motor executed successfully')
-                return 1            # Return 1 if execution
-            else:
-                QMessageBox.critical(None, 'Error', 'Motor execution interrupted')
-                return 2            # Return 2 if execution is interrupted
+                self.thread.stop()
+                self.thread.wait()
+                self.thread.finished.emit()
             
 
         except Exception as e:
-            QMessageBox.critical(None, 'Error', f'Error: {e}')
+            QMessageBox.critical(None, 'Error', f'Error in Motor Class: {e}')
             return 0            # Return 0 if execution fails
         

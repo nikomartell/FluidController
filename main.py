@@ -41,7 +41,7 @@ class App(QWidget):
                     error_label.setObjectName('device_info')
                     errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
             
-        if not self.device:
+        if not device:
             error_label = QLabel('Controller not found', self)
             error_label.setStyleSheet('color: red; font-weight: bold;')
             error_label.setObjectName('device_info')
@@ -94,13 +94,16 @@ class App(QWidget):
         self.send_commands_button = QPushButton('Send Commands', self)
         
         try:
-            self.send_commands_button.clicked.disconnect
-            self.send_commands_button.clicked.connect(self.execute())
-            self.send_commands_button.setText('Execute')
-            self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+            if self.device.module is not None:
+                self.send_commands_button.clicked.disconnect
+                self.send_commands_button.clicked.connect(self.execute)
+                self.send_commands_button.setText('Execute')
+                self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+            else:
+                self.send_commands_button.setText('No Device Found')
+                self.send_commands_button.setStyleSheet('background-color: red;')
         except Exception as e:
-            self.send_commands_button.setText('No Device Found')
-            self.send_commands_button.setStyleSheet('background-color: red;')
+            print(e)
 
             
         button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
@@ -120,24 +123,23 @@ class App(QWidget):
     # Methods
     def execute(self):
         try:
-            if self.device is None:
-                return
-            else:
-                commands = self.deviceControl.get_commands()
-                self.device.send_commands(commands)
-                while self.device.motors.thread.is_running:
-                    self.send_commands_button.setText('Stop Commands')
-                    self.send_commands_button.setStyleSheet('background-color: red;')
-                    self.send_commands_button.clicked.disconnect
-                    self.send_commands_button.clicked.connect(self.device.stop())
+            commands = self.deviceControl.get_commands()
+            self.device.send_commands(commands)
+            while self.device.motors.thread._is_running:
+                self.send_commands_button.setText('Stop Commands')
+                self.send_commands_button.setStyleSheet('background-color: red;')
+                self.send_commands_button.clicked.disconnect
+                self.send_commands_button.clicked.connect(self.device.stop)
                     
         except Exception as e:
+            print(e)
             return
 
 
     def refresh_device_connection(self):
         self.device = Controller()
         self.initUI(self.device)
+        
         
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
@@ -148,6 +150,7 @@ class App(QWidget):
                 for command in commands:
                     command_writer.writerow([command])
             QMessageBox.information(self, 'Success', f'Commands saved to {file_name}')
+
 
     def import_commands_from_csv(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Import Commands from CSV", "", "CSV Files (*.csv);;All Files (*)")

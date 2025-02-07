@@ -7,7 +7,7 @@ class CommandSet:
         self.strokes = strokes if strokes is not '' else 10
         self.acceleration = acceleration if acceleration is not '' else 10
         self.flowDirection = flowDirection
-        self.duration = duration if duration is not '' else 10
+        self.duration = duration if duration is not '' else 3
         self.iterations = iterations if iterations is not '' else 1
 
     
