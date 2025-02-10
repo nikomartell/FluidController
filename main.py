@@ -2,20 +2,31 @@ import sys
 import serial
 from Controller import Controller
 from ControlCenter import controlCenter
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QMenuBar, QFileDialog, QSizePolicy
-from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
+from CommandSet import CommandSet
 from ConnectionThread import ConnectionThread
+from MotorThread import MotorThread
 import csv
+
+class MainSignals(QObject):
+    def __init__(self):
+        super().__init__()
+        self.isClosing = False
 
 class App(QWidget):
     def __init__(self):        
         super().__init__()
-        self.find_controller()
+        self.mainSignals = MainSignals()
+        self.threadpool = QThreadPool()
+        self.connections = ConnectionThread()
+        self.connections.start()
+        self.device = self.connections.con
         self.initUI()
+        
     
     def initUI(self):
-        
         
         # Stylesheet
         with open("main.css", "r") as file:
@@ -25,10 +36,8 @@ class App(QWidget):
         self.setWindowTitle('Fluidics Device Controller')
         self.layout = QVBoxLayout()
         # Multithreading
-        self.threadpool = QThreadPool()
-        connections = ConnectionThread(self.find_controller())
-        self.threadpool.start(connections)
         
+        self.draw_errorLayout()
         self.layout.addLayout(self.errorLayout)
         #---------------------------------------------------------#
 
@@ -69,10 +78,7 @@ class App(QWidget):
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
-        
-        self.refresh_button = QPushButton('Refresh Device Connection', self)
-        self.refresh_button.clicked.connect(self.refresh_device_connection)
-        button_layout.addWidget(self.refresh_button, alignment=Qt.AlignmentFlag.AlignLeft)
+    
         
         self.send_commands_button = QPushButton('Send Commands', self)
         self.send_commands_button.setText('Execute')
@@ -89,14 +95,15 @@ class App(QWidget):
         
         self.layout.addLayout(control_layout)
         self.layout.addLayout(button_layout)
-
+        
         self.setLayout(self.layout)
+    
+        self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
     
     #---------------------------------------------------------#
     
     # Methods
-    def find_controller(self):
-        self.device = Controller()
+    def draw_errorLayout(self):
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         if self.device is not None:
@@ -122,13 +129,26 @@ class App(QWidget):
             QMessageBox.critical(self, 'Error', 'Controller not found')
             return
         commands = self.deviceControl.get_commands()
-        self.device.send_commands(commands)
-
-
-    def refresh_device_connection(self):
-        self.device = Controller()
-        self.initUI(self.device)
-        
+        self.motor_task = MotorThread(self.device, commands)
+        self.motor_task.signals.finished.connect(self.motor_stopped)
+        self.motor_task.start()
+        self.motor_running()
+            
+    def motor_running(self):
+        if self.motor_task._is_running:
+            self.send_commands_button.setStyleSheet('background-color: red;')
+            self.send_commands_button.setToolTip('STOP MOTOR')
+            self.send_commands_button.setText('STOP MOTOR')
+            self.send_commands_button.clicked.disconnect()
+            self.send_commands_button.clicked.connect(self.motor_task.quit)
+    
+    def motor_stopped(self):
+        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
+        self.send_commands_button.setToolTip('Execute Commands')
+        self.send_commands_button.setText('Execute')
+        self.send_commands_button.clicked.disconnect()
+        self.send_commands_button.clicked.connect(self.execute)
+    
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
@@ -151,7 +171,16 @@ class App(QWidget):
     #---------------------------------------------------------#
 
 if __name__ == '__main__':
+    def close_threads():
+        ex.mainSignals.isClosing = True
+        ex.connections.quit()
+        ex.motor_task.quit()
+        ex.threadpool.waitForDone()
+        ex.threadpool.clear()
+    
     app = QApplication(sys.argv)
+    app.aboutToQuit.connect(close_threads)
     ex = App()
     ex.show()
     sys.exit(app.exec())
+    

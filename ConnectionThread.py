@@ -1,30 +1,42 @@
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QRunnable, QObject, pyqtSignal
+from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread
+from Controller import Controller
 import time, traceback, sys
 
-class ConnectionThread(QRunnable):
+class ConnectionThread(QThread):
     
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self):
         super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
+        self.con = Controller()
         self.signals = ConnectionSignal()
         self._is_running = True
         
         
     def run(self):
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            while self._is_running:
+                if self.con.module is None:
+                    self.con = Controller()
+                    time.sleep(1)
+                else:
+                    while self.con.module is not None:
+                        if self._is_running:
+                            time.sleep(1)
+                        else:
+                            break
+                
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
-            self.signals.result.emit(result)
+            self.signals.result.emit(self.con)
         finally:
             self.signals.finished.emit()
-            
+        
+    def quit(self):
+        self._is_running = False
+        
 class ConnectionSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)

@@ -5,11 +5,11 @@ import pytrinamic
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QDeadlineTimer
+from PyQt6.QtCore import QDeadlineTimer, QObject
 from Scale import Scale
 from MotorThread import MotorThread
         
-class Controller:
+class Controller(QObject):
     def __init__(self):
         
         pytrinamic.show_info()
@@ -23,6 +23,9 @@ class Controller:
         self.module = TMCM3110(interface) if interface else None
         self.linear = self.module.motors[0] if interface else None
         self.rotary = self.module.motors[1] if interface else None
+        if interface:
+            self.linear.stop()
+            self.rotary.stop()
         self.scale = Scale('COM4')
         self.errors = [None, None, None]
     
@@ -31,40 +34,6 @@ class Controller:
             self.errors[1] = 'Rotary Motor not found'
         if not self.scale.ser:
             self.errors[2] = 'Scale not found'
-            
-
-    # Sends commands to respective component (Linear Motor or Rotary Motor). One component used at a time
-    def send_commands(self, commands):
-        # Choose the correct device to send commands to
-        try:
-            match commands.component:
-                case 'Linear Motor':
-                    if self.linear is not None:
-                        self.linearProcess = MotorThread(motor=self.linear, command_set=commands)
-                        self.linearProcess.finished.connect(lambda: print("Linear Motor finished"))
-                        self.linearProcess.start()
-                        self.linearProcess.wait(deadline=QDeadlineTimer(1000))
-                    else:
-                        QMessageBox.critical(None, 'Error', 'Linear Motor not found')
-                case 'Rotary Motor':
-                    if self.rotary is not None:
-                        self.rotaryProcess = MotorThread(motor=self.rotary, command_set=commands)
-                        self.rotaryProcess.finished.connect(lambda: print("Rotary Motor finished"))
-                        self.rotaryProcess.start()
-                        self.rotaryProcess.wait(deadline=QDeadlineTimer(1000))
-                    else:
-                        QMessageBox.critical(None, 'Error', 'Rotary Motor not found')
-                case _:
-                    QMessageBox.critical(None, 'Error', 'Invalid component specified')
-        except Exception as e:
-            QMessageBox.critical(None, 'Error', f'Error: {e}')
-            
-    
-    def stop(self):
-        if self.linear.thread is not None:
-            self.linearProcess.terminate()
-        if self.rotary.thread is not None:
-            self.rotaryProcess.terminate()
     
     def motor_settings(self):
         try:
