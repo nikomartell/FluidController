@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread
+from pytrinamic.connections import ConnectionManager
 from Controller import Controller
 import time, traceback, sys
 
@@ -9,6 +10,7 @@ class ConnectionThread(QThread):
         super().__init__()
         self.con = Controller()
         self.signals = ConnectionSignal()
+        self.interface = ConnectionManager()
         self._is_running = True
         
         
@@ -17,9 +19,10 @@ class ConnectionThread(QThread):
             while self._is_running:
                 if self.con.module is None:
                     self.con = Controller()
-                    time.sleep(1)
+                    time.sleep(2)
                 else:
                     while self.con.module is not None:
+                        self.signals.connected.emit()
                         if self._is_running:
                             time.sleep(1)
                         else:
@@ -41,3 +44,4 @@ class ConnectionSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
+    connected = pyqtSignal()

@@ -56,18 +56,20 @@ class App(QWidget):
         
         #Settings Menu
         settings_menu = menubar.addMenu('Settings')
-        settings_action = QAction('Settings', self)
-        settings_menu.addAction(settings_action)
+        motor_settings_action = QAction('Change Motor Settings', self)
+        scale_settings_action = QAction('Change Scale Settings', self)
+        settings_menu.addAction(motor_settings_action)
+        settings_menu.addAction(scale_settings_action)
         
         #Tools Menu
         tools_menu = menubar.addMenu('Tools')
-        tools_action = QAction('Tools', self)
+        tools_action = QAction('Change Analysis', self)
         tools_menu.addAction(tools_action)
         
         #Help Menu
         help_menu = menubar.addMenu('Help')
         self.layout.setMenuBar(menubar)
-        help_action = QAction('Help', self)
+        help_action = QAction('Manual', self)
         help_menu.addAction(help_action)
         #---------------------------------------------------------#
         
@@ -78,31 +80,37 @@ class App(QWidget):
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
-    
-        
-        self.send_commands_button = QPushButton('Send Commands', self)
-        self.send_commands_button.setText('Execute')
-        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
-        self.send_commands_button.clicked.connect(self.execute)
-        
-        if self.device.module is None:
-            self.send_commands_button.setEnabled(False)
-            self.send_commands_button.setStyleSheet('background-color: red;')
-            self.send_commands_button.setToolTip('Controller not found')
-            self.send_commands_button.setText('Controller not found')
-            
-        button_layout.addWidget(self.send_commands_button, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
+        self.execute_button = QPushButton('Execute', self)
+        self.execute_button.setToolTip('Execute Commands')
+        self.execute_button.setText('Execute')
+        self.execute_button.clicked.connect(self.execute)
+        self.draw_execute_button()        
+        button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         self.layout.addLayout(control_layout)
         self.layout.addLayout(button_layout)
         
         self.setLayout(self.layout)
     
-        self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
     
     #---------------------------------------------------------#
     
-    # Methods
+    # Methods ---------- #
+    
+    def execute(self):
+        if self.device is None:
+            QMessageBox.critical(self, 'Error', 'Controller not found')
+            return
+        commands = self.deviceControl.get_commands()
+        self.motor_task = MotorThread(self.device, commands)
+        self.motor_task.signals.finished.connect(self.motor_stopped)
+        self.motor_task.start()
+        self.draw_execute_button()
+    
+    # Update Layouts ----------- #
+    
     def draw_errorLayout(self):
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -124,30 +132,31 @@ class App(QWidget):
             error_label.setObjectName('device_info')
             self.errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
     
-    def execute(self):
-        if self.device is None:
-            QMessageBox.critical(self, 'Error', 'Controller not found')
-            return
-        commands = self.deviceControl.get_commands()
-        self.motor_task = MotorThread(self.device, commands)
-        self.motor_task.signals.finished.connect(self.motor_stopped)
-        self.motor_task.start()
-        self.motor_running()
+    def draw_execute_button(self):
+        if self.device.module is None:
+            self.execute_button.setEnabled(False)
+            self.execute_button.setStyleSheet('background-color: red;')
+            self.execute_button.setToolTip('Controller not found')
+            self.execute_button.setText('Controller not found')
             
-    def motor_running(self):
-        if self.motor_task._is_running:
-            self.send_commands_button.setStyleSheet('background-color: red;')
-            self.send_commands_button.setToolTip('STOP MOTOR')
-            self.send_commands_button.setText('STOP MOTOR')
-            self.send_commands_button.clicked.disconnect()
-            self.send_commands_button.clicked.connect(self.motor_task.quit)
-    
-    def motor_stopped(self):
-        self.send_commands_button.setStyleSheet('background-color: #0B41CD;')
-        self.send_commands_button.setToolTip('Execute Commands')
-        self.send_commands_button.setText('Execute')
-        self.send_commands_button.clicked.disconnect()
-        self.send_commands_button.clicked.connect(self.execute)
+        elif not self.motor_task._is_running and self.device.module:
+            self.execute_button.setEnabled(True)
+            self.execute_button.setStyleSheet('background-color: #0B41CD;')
+            self.execute_button.setToolTip('Execute Commands')
+            self.execute_button.setText('Execute')
+            self.execute_button.clicked.disconnect()
+            self.execute_button.clicked.connect(self.execute)
+        
+        elif self.motor_task._is_running:
+            self.execute_button.setEnabled(True)
+            self.execute_button.setStyleSheet('background-color: red;')
+            self.execute_button.setToolTip('STOP MOTOR')
+            self.execute_button.setText('STOP MOTOR')
+            self.execute_button.clicked.disconnect()
+            self.execute_button.clicked.connect(self.motor_task.quit)
+        
+        
+    # Files and Settings ----------- #
     
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")

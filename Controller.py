@@ -12,12 +12,11 @@ from MotorThread import MotorThread
 class Controller(QObject):
     def __init__(self):
         
-        pytrinamic.show_info()
         connection_manager = ConnectionManager()
         try: 
             interface = connection_manager.connect()
         except Exception as e:
-            print(f'Error: {e}')
+            # print(f'Error: {e}')
             interface = None
         self.name = 'Pump Controller' 
         self.module = TMCM3110(interface) if interface else None
