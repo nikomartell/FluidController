@@ -25,7 +25,8 @@ class Controller(QObject):
         if interface:
             self.linear.stop()
             self.rotary.stop()
-        self.scale = Scale('COM4')
+        self.scale = Scale('A9GKN3II')
+        print((self.scale.device))
         self.errors = [None, None, None]
     
         if not interface:
