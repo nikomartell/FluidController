@@ -1,10 +1,8 @@
-import serial
+from usbx import usb
 
-import serial.tools.list_ports
+def list_usb_devices():
+    for device in usb.get_devices():
+        print(device)
 
-ports = serial.tools.list_ports.comports()
-for port in ports:
-    if 'USB' in port.hwid:
-        vid = port.vid
-        pid = port.pid
-        print(f"Device: {port.device}, Description: {port.description}, Address: {port.hwid}, VID: {vid}, PID: {pid}")
+if __name__ == "__main__":
+    list_usb_devices()
