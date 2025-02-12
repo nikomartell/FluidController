@@ -1,13 +1,19 @@
 import sys
+from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('QtAgg')
+import numpy as np
 import serial
-from Controller import Controller
+from Controller.Controller import Controller
 from ControlCenter import controlCenter
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
 from CommandSet import CommandSet
-from ConnectionThread import ConnectionThread
-from MotorThread import MotorThread
+from Controller.ConnectionThread import ConnectionThread
+from Controller.MotorThread import MotorThread
+from Analytics.Analysis import AnalysisCenter
+from Analytics.GraphThread import GraphThread
 import csv
 
 class MainSignals(QObject):
@@ -23,6 +29,8 @@ class App(QWidget):
         self.connections = ConnectionThread()
         self.connections.start()
         self.device = self.connections.con
+        self.fig, self.ax = plt.subplots()
+        self.graph, = self.ax.plot(np.arange(100), np.arange(100))
         self.initUI()
         
     
@@ -74,14 +82,15 @@ class App(QWidget):
         #---------------------------------------------------------#
         
         # Device Control Center
-        control_layout = QHBoxLayout()
+        self.control_layout = QHBoxLayout()
         self.deviceControl = controlCenter(self.device)
-        control_layout.addWidget(self.deviceControl.Container)
+        self.control_layout.addWidget(self.deviceControl.Container)
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
 
         self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
+        
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
@@ -89,7 +98,18 @@ class App(QWidget):
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
-        self.layout.addLayout(control_layout)
+        plt.ion()
+        
+        self.graph_thread = GraphThread(0, 0, graph = self.graph)
+        self.graph_thread.start()
+        
+        self.analysis_layout = QVBoxLayout()
+        self.analysis_widget = self.graph
+        
+        self.analysis_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
+        
+        self.layout.addLayout(self.control_layout)
+        self.control_layout.addLayout(self.analysis_layout)
         self.layout.addLayout(button_layout)
         
         self.setLayout(self.layout)
@@ -105,8 +125,10 @@ class App(QWidget):
             return
         commands = self.deviceControl.get_commands()
         self.motor_task = MotorThread(self.device, commands)
-        self.motor_task.signals.finished.connect(self.motor_stopped)
+        self.graph_thread = GraphThread(self.device, self.analysis_widget.canvas)
+        self.motor_task.signals.finished.connect(self.draw_execute_button, self.graph_thread.quit)
         self.motor_task.start()
+        self.graph_thread.start()
         self.draw_execute_button()
     
     # Update Layouts ----------- #
@@ -184,6 +206,7 @@ if __name__ == '__main__':
         ex.mainSignals.isClosing = True
         ex.connections.quit()
         ex.motor_task.quit()
+        ex.graph_thread.quit()
         ex.threadpool.waitForDone()
         ex.threadpool.clear()
     

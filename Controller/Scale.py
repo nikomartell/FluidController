@@ -7,23 +7,21 @@ class Scale:
         self.name = None
         self.ser = ser
         self.device = usb.find_device(serial = self.ser)
-        if self.ser is None:
-            return self.ser
 
     def send_command(self, command):
-        if self.ser:
+        if self.device:
             self.ser.write(command.encode())
         else:
             raise Exception("Serial port not initialized")
 
     def read_response(self):
-        if self.ser:
+        if self.device:
             return self.ser.readline()
         else:
             raise Exception("Serial port not initialized")
         
     def get_weight(self):
-        if self.ser:
+        if self.device:
             self.ser.write('W'.encode())
             weightBin = self.read_response()
             weight = self.parse_weight(weightBin)

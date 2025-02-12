@@ -6,8 +6,8 @@ from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QDeadlineTimer, QObject
-from Scale import Scale
-from MotorThread import MotorThread
+from Controller.Scale import Scale
+from Controller.MotorThread import MotorThread
         
 class Controller(QObject):
     def __init__(self):
@@ -26,13 +26,12 @@ class Controller(QObject):
             self.linear.stop()
             self.rotary.stop()
         self.scale = Scale('A9GKN3II')
-        print((self.scale.device))
         self.errors = [None, None, None]
     
         if not interface:
             self.errors[0] = 'Linear Motor not found'
             self.errors[1] = 'Rotary Motor not found'
-        if not self.scale.ser:
+        if not self.scale.device:
             self.errors[2] = 'Scale not found'
     
     def motor_settings(self):

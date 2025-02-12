@@ -1,11 +1,15 @@
+import sys
 from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QComboBox, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator
-from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QObject
+import time
+import traceback
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from Analytics.GraphThread import GraphThread
 
-class analysis_widget(QWidget):
+class AnalysisCenter(QWidget):
     def __init__(self):
         
         self.Container = QWidget()
@@ -21,10 +25,5 @@ class analysis_widget(QWidget):
         self.graph_widget = QWidget(self.Container)
         self.graph_layout = QVBoxLayout(self.graph_widget)
         
-        self.canvas = plt.figure().add_subplot(111)
-        self.canvas.plot(np.random.rand(10))
-        
-        self.graph_layout.addWidget(self.canvas.figure.canvas)
+        self.graph_layout.addWidget(self.fig.canvas)
         graph_layout.addWidget(self.graph_widget)
-        
-        

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread
 from pytrinamic.connections import ConnectionManager
-from Controller import Controller
+from Controller.Controller import Controller
 import time, traceback, sys
 
 class ConnectionThread(QThread):
