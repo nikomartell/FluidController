@@ -6,9 +6,13 @@ from ftd2xx import ftd2xx as ftd
 class Scale:
     def __init__(self):
         self.name = None
-        self.device = ftd.open(0)
-        print(self.device.getDeviceInfo())
-        print(self.get_weight())       
+        try:
+            self.device = ftd.open(0)
+            print(self.device.getDeviceInfo())
+            print(self.get_weight())
+        except:
+            self.device = None
+            print('Scale not found')  
 
     def send_command(self):
         if self.device:
