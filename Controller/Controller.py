@@ -1,5 +1,5 @@
 import os
-import serial
+from ftd2xx import ftd2xx as ftd
 import serial.tools.list_ports
 import pytrinamic
 from pytrinamic.connections import ConnectionManager
@@ -25,13 +25,14 @@ class Controller(QObject):
         if interface:
             self.linear.stop()
             self.rotary.stop()
-        self.scale = Scale('A9GKN3II')
+        self.scale = Scale()
+            #print(f'Error: {e}')
         self.errors = [None, None, None]
     
         if not interface:
             self.errors[0] = 'Linear Motor not found'
             self.errors[1] = 'Rotary Motor not found'
-        if not self.scale.device:
+        if not self.scale:
             self.errors[2] = 'Scale not found'
     
     def motor_settings(self):

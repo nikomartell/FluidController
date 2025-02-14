@@ -1,4 +1,5 @@
 import sys
+import time
 from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use('QtAgg')
@@ -30,7 +31,7 @@ class App(QWidget):
         self.connections.start()
         self.device = self.connections.con
         self.fig, self.ax = plt.subplots()
-        self.graph, = self.ax.plot(np.arange(100), np.arange(100))
+        self.graph, = self.ax.plot(np.arange(10), np.arange(10))
         self.initUI()
         
     
@@ -84,7 +85,7 @@ class App(QWidget):
         # Device Control Center
         self.control_layout = QHBoxLayout()
         self.deviceControl = controlCenter(self.device)
-        self.control_layout.addWidget(self.deviceControl.Container)
+        self.control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignTop)
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -99,14 +100,15 @@ class App(QWidget):
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         plt.ion()
-        
-        self.graph_thread = GraphThread(0, 0, graph = self.graph)
+        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
         self.graph_thread.start()
         
         self.analysis_layout = QVBoxLayout()
-        self.analysis_widget = self.graph
+        self.analysisCenter = AnalysisCenter(self.device)
+        self.graph_widget = QWidget(self.analysisCenter.Container)
+        self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
+        self.analysis_layout.addWidget(self.analysisCenter.Container)
         
-        self.analysis_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
         
         self.layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)

@@ -32,12 +32,6 @@ class controlCenter(QWidget):
         end_case_layout.addWidget(endCase, alignment=Qt.AlignmentFlag.AlignTop)
         end_case_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        weight_layout = QVBoxLayout(self.Container)
-        weightSettings = QLabel('Weight Monitor', self.Container)
-        weightSettings.setObjectName('title')
-        weight_layout.addWidget(weightSettings, alignment=Qt.AlignmentFlag.AlignTop)
-        weight_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        
         button_layout = QHBoxLayout(self.Container)
         button_layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
         
@@ -126,35 +120,12 @@ class controlCenter(QWidget):
         
         #----------Weight Scale Settings----------#
         
-        # Scale Control
-        def update_weight():
-            
-            # This function should interact with the controller to get the current weight
-            
-            if controller is not None and controller.scale is not None:
-                self.scaleData = controller.scale.get_weight()
-            else:
-                if not controller:
-                    self.scaleData = "Controller not found"
-                elif controller.scale is None:
-                    self.scaleData = "Scale not found"
-            weightLabel.setText(self.scaleData)
         
-        weightLabel = QLabel('0.00', self.Container)
-        weightLabel.setObjectName('weight')
-        weight_layout.addWidget(weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
-        timer = QTimer(self.Container)
-        timer.timeout.connect(update_weight)
-        
-        tareScale = QPushButton('Tare Scale', self.Container)
-        tareScale.setObjectName('tare')
-        button_layout.addWidget(tareScale, alignment=Qt.AlignmentFlag.AlignRight)
         
         #---------------------------------------------------------#
         
         device_layout.addLayout(motion_layout)
         device_layout.addLayout(end_case_layout)
-        device_layout.addLayout(weight_layout)
         
         top_layout.addLayout(device_layout)
         top_layout.addLayout(button_layout)

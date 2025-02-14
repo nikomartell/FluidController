@@ -10,12 +10,12 @@ import pandas as pd
 
 class GraphThread(QThread):
     
-    def __init__(self, x, y, graph):
+    def __init__(self, x, scale, graph):
         super().__init__()
         self.signals = GraphSignal()
         self._is_running = True
         self.x = x
-        self.y = y
+        self.scale = scale
         self.data = graph
         
     def run(self):
@@ -24,12 +24,11 @@ class GraphThread(QThread):
             y_data = []
             while self._is_running:
                 self.x += 1
-                self.y += 1
                 x_data.append(self.x)
-                y_data.append(self.y)
+                y_data.append(self.scale.get_weight())
                 self.data.set_data(x_data, y_data)
                 self.signals.result.emit()
-                time.sleep(0.1)
+                time.sleep(.5)
                 
         except:
             traceback.print_exc()

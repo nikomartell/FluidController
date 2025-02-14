@@ -37,10 +37,10 @@ class MotorThread(QThread):
                             break
                         time.sleep(0.1)
                 
+                time.sleep(1)
                 if not self._is_running:
                     break
                 
-                time.sleep(1)
                 start_time = time.time()
                 while time.time() - start_time < self.command_set.duration and self._is_running:
                     self.task()
