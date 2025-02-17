@@ -4,7 +4,7 @@ from PyQt6.QtCore import QTimer, Qt
 from CommandSet import CommandSet
 
 class controlCenter(QWidget):
-    def __init__(self, controller):
+    def __init__(self):
         
         
         self.Container = QWidget()
@@ -17,6 +17,7 @@ class controlCenter(QWidget):
         device_layout.setContentsMargins(0, 20, 0, 20)
         device_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
+        # Section Titles and creation
         
         motion_layout = QVBoxLayout(self.Container)
         motion_layout.setContentsMargins(0, 0, 30, 0)
@@ -116,11 +117,7 @@ class controlCenter(QWidget):
         iterationsLayout = QVBoxLayout()
         iterationsLayout.addWidget(iterationsLabel, alignment=Qt.AlignmentFlag.AlignTop)
         iterationsLayout.addWidget(self.iterations, alignment=Qt.AlignmentFlag.AlignTop)
-        end_case_layout.addLayout(iterationsLayout)
-        
-        #----------Weight Scale Settings----------#
-        
-        
+        end_case_layout.addLayout(iterationsLayout)        
         
         #---------------------------------------------------------#
         

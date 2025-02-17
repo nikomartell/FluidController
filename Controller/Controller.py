@@ -32,7 +32,7 @@ class Controller(QObject):
         if not interface:
             self.errors[0] = 'Linear Motor not found'
             self.errors[1] = 'Rotary Motor not found'
-        if not self.scale:
+        if not self.scale.device:
             self.errors[2] = 'Scale not found'
     
     def motor_settings(self):

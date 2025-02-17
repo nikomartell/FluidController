@@ -14,24 +14,25 @@ class Scale:
             self.device = None
             print('Scale not found')  
 
-    def send_command(self):
+    # Function called by Control Panel to tare the scale
+    def tare(self):
         if self.device:
-            self.device.open()
-            transfer = ControlTransfer(RequestType.VENDOR, Recipient.DEVICE, 0x01, 0x00, 0x00)
-            self.device.control_transfer_out(transfer)
-            self.device.close()
+            self.device.write(b'\x55')
         else:
             raise Exception("Scale not found")
             
-        
+    # Function called by Analysis Center to read weight
     def get_weight(self):
         if self.device:
             weight = self.device.read(64)
             return self.parse_weight(weight)
+        else:
+            return "Scale not found"
         
+    # Function to read the bytes from the scale and decode the data of it to legible weight
     def parse_weight(self, data):
         if not data or len(data) < 16:
-            return "No data received from the scale"
+            return None
 
         sign = data[0:1].decode('latin-1')
         weight = data[2:9].decode('latin-1')

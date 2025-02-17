@@ -16,17 +16,21 @@ class GraphThread(QThread):
         self._is_running = True
         self.x = x
         self.scale = scale
-        self.data = graph
+        self.graph = graph
         
+    # X is time, Y is weight
     def run(self):
         try:
+            # Reset the graph by making new empty data lists
             x_data = []
             y_data = []
+            
+            # While the thread is running, keep updating the graph with new data
             while self._is_running:
-                self.x += 1
+                self.x += .5
                 x_data.append(self.x)
                 y_data.append(self.scale.get_weight())
-                self.data.set_data(x_data, y_data)
+                self.graph.set_data(x_data, y_data)
                 self.signals.result.emit()
                 time.sleep(.5)
                 

@@ -16,24 +16,21 @@ class ConnectionThread(QThread):
         
     def run(self):
         try:
+            # While Connection is not established, keep trying to connect
             while self._is_running:
                 if self.con.module is None:
                     self.con = Controller()
                     time.sleep(2)
                 else:
-                    while self.con.module is not None:
-                        self.signals.connected.emit()
-                        if self._is_running:
-                            time.sleep(1)
-                        else:
-                            break
+                    self.signals.connected.emit()
+                    break
                 
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
-            self.signals.result.emit(self.con)
+            self.signals.result.emit()
         finally:
             self.signals.finished.emit()
         
