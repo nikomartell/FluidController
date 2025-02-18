@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 class AnalysisCenter(QWidget):
     def __init__(self, controller):
         
@@ -29,16 +30,16 @@ class AnalysisCenter(QWidget):
         weight_layout.addWidget(weightSettings, alignment=Qt.AlignmentFlag.AlignTop)
         weight_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        weightLabel = QLabel('0.00', self.Container)
-        weightLabel.setObjectName('weight')
-        weight_layout.addWidget(weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
-        timer = QTimer(self.Container)
-        timer.timeout.connect(lambda: weightLabel.setText(str(controller.scale.get_weight())))
-        timer.start(100)
         
-        tareScale = QPushButton('Tare Scale', self.Container)
-        tareScale.setObjectName('tare')
-        weight_layout.addWidget(tareScale, alignment=Qt.AlignmentFlag.AlignRight)
+        self.weightLabel = QLabel('0.00', self.Container)
+        self.weightLabel.setObjectName('weight')
+        weight_layout.addWidget(self.weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
+        
+        
+        self.tareScale = QPushButton('Tare Scale', self.Container)
+        self.tareScale.setObjectName('tare')
+        self.tareScale.clicked.connect(controller.scale.tare)
+        weight_layout.addWidget(self.tareScale, alignment=Qt.AlignmentFlag.AlignRight)
         
         top_layout.addWidget(self.graph_widget)
         top_layout.addLayout(weight_layout)

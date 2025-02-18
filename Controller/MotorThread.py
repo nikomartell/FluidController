@@ -9,12 +9,13 @@ class MotorThread(QThread):
         self.controller = controller
         self.command_set = command_set
         self.signals = MotorSignal()
-        self._is_running = True
+        self._is_running = False
 
     def quit(self):
         self._is_running = False
 
     def run(self):
+        self._is_running = True
         if self.controller is not None:
             match self.command_set.component:
                 case 'Linear Motor':

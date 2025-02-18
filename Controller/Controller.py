@@ -34,24 +34,29 @@ class Controller(QObject):
             self.errors[1] = 'Rotary Motor not found'
         if not self.scale.device:
             self.errors[2] = 'Scale not found'
+            
+        print(self.linear.stallguard2.get_filter())
+        print(self.linear.stallguard2.get_threshold())
+        
+        print(self.rotary.stallguard2.get_filter())
+        print(self.rotary.stallguard2.get_threshold())
+    
     
     def motor_settings(self):
         try:
             self.linear.max_acceleration = 500
             self.linear.max_velocity = 1175
-            self.linear.drive_settings.max_current = 128
+            self.linear.drive_settings.max_current = 4
             self.linear.drive_settings.standby_current = 0
             self.linear.drive_settings.boost_current = 0
             self.linear.drive_settings.microstep_resolution = self.linear.ENUM.microstep_resolution_256_microsteps
             
             self.rotary.max_acceleration = 1000
             self.rotary.max_velocity = 1000
-            self.rotary.drive_settings.max_current = 128
+            self.rotary.drive_settings.max_current = 4
             self.rotary.drive_settings.standby_current = 0
             self.rotary.drive_settings.boost_current = 0
             self.rotary.drive_settings.microstep_resolution = self.linear.ENUM.microstep_resolution_256_microsteps
             
-            self.linear.actual_position = 0
-            self.rotary.actual_position = 0
         except Exception as e:
             print(f'Error: {e}')

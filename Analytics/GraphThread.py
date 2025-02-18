@@ -27,12 +27,12 @@ class GraphThread(QThread):
             
             # While the thread is running, keep updating the graph with new data
             while self._is_running:
-                self.x += .5
+                self.x += .05
                 x_data.append(self.x)
-                y_data.append(self.scale.get_weight())
+                y_data.append(self.scale.weight)
                 self.graph.set_data(x_data, y_data)
                 self.signals.result.emit()
-                time.sleep(.5)
+                time.sleep(.01)
                 
         except:
             traceback.print_exc()

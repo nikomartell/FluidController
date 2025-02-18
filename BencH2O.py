@@ -15,6 +15,7 @@ from Controller.ConnectionThread import ConnectionThread
 from Controller.MotorThread import MotorThread
 from Analytics.Analysis import AnalysisCenter
 from Analytics.GraphThread import GraphThread
+from Analytics.WeightThread import WeightThread
 import csv
 
 class MainSignals(QObject):
@@ -94,6 +95,7 @@ class App(QWidget):
         self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
         self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
         
+        
         if self.device.scale.device is not None:
             self.graph_thread.start()
         
@@ -112,6 +114,10 @@ class App(QWidget):
         self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
         self.analysis_layout.addWidget(self.analysisCenter.Container)
         
+        self.weight_thread = WeightThread(self.device.scale)
+        self.weight_thread.start()
+        self.analysisCenter.tareScale.clicked.connect(self.tare)
+        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
         
         self.layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)
@@ -133,6 +139,7 @@ class App(QWidget):
         self.motor_task.signals.finished.connect(self.draw_execute_button, self.graph_thread.quit)
         if self.graph_thread._is_running:
             self.graph_thread.quit()
+        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
         self.motor_task.start()
         self.graph_thread.start()
         self.draw_execute_button()
@@ -166,8 +173,16 @@ class App(QWidget):
             self.execute_button.setStyleSheet('background-color: red;')
             self.execute_button.setToolTip('Controller not found')
             self.execute_button.setText('Controller not found')
-            
-        elif not self.motor_task._is_running and self.device.module:
+        
+        elif self.motor_task._is_running == True:
+            self.execute_button.setEnabled(True)
+            self.execute_button.setStyleSheet('background-color: red;')
+            self.execute_button.setToolTip('STOP MOTOR')
+            self.execute_button.setText('STOP MOTOR')
+            self.execute_button.clicked.disconnect()
+            self.execute_button.clicked.connect(self.motor_task.quit)    
+        
+        elif (self.device.module is not None) and (self.motor_task._is_running == False):
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: #0B41CD;')
             self.execute_button.setToolTip('Execute Commands')
@@ -175,15 +190,18 @@ class App(QWidget):
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
         
-        elif self.motor_task._is_running:
-            self.execute_button.setEnabled(True)
-            self.execute_button.setStyleSheet('background-color: red;')
-            self.execute_button.setToolTip('STOP MOTOR')
-            self.execute_button.setText('STOP MOTOR')
-            self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.motor_task.quit)
-        
-        
+    def tare(self):
+        if self.weight_thread._is_running:
+            self.weight_thread.quit()
+        if self.graph_thread._is_running:
+            self.graph_thread.quit()
+        self.weight_thread = WeightThread(self.device.scale)
+        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
+        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
+        self.device.scale.weight = 0.00
+        self.weight_thread.start()
+        self.graph_thread.start()
+    
     # Files and Settings ----------- #
     
     def store_commands_to_csv(self):
@@ -212,6 +230,7 @@ if __name__ == '__main__':
         ex.connections.quit()
         ex.motor_task.quit()
         ex.graph_thread.quit()
+        ex.weight_thread.quit()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)

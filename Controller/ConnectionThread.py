@@ -29,8 +29,6 @@ class ConnectionThread(QThread):
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
-        else:
-            self.signals.result.emit()
         finally:
             self.signals.finished.emit()
         
