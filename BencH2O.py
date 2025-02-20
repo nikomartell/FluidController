@@ -18,15 +18,9 @@ from Analytics.GraphThread import GraphThread
 from Analytics.WeightThread import WeightThread
 import csv
 
-class MainSignals(QObject):
-    def __init__(self):
-        super().__init__()
-        self.isClosing = False
-
 class App(QWidget):
     def __init__(self):        
         super().__init__()
-        self.mainSignals = MainSignals()
         self.connections = ConnectionThread()
         self.connections.start()
         self.device = self.connections.con

@@ -35,11 +35,11 @@ class Controller(QObject):
         if not self.scale.device:
             self.errors[2] = 'Scale not found'
             
-        print(self.linear.stallguard2.get_filter())
-        print(self.linear.stallguard2.get_threshold())
+        #print(self.linear.stallguard2.get_filter())
+        #print(self.linear.stallguard2.get_threshold())
         
-        print(self.rotary.stallguard2.get_filter())
-        print(self.rotary.stallguard2.get_threshold())
+        #print(self.rotary.stallguard2.get_filter())
+        #print(self.rotary.stallguard2.get_threshold())
     
     
     def motor_settings(self):
