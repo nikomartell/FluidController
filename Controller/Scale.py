@@ -1,3 +1,4 @@
+import time
 from PyQt6.QtWidgets import QMessageBox
 from ftd2xx import ftd2xx as ftd
 
@@ -16,6 +17,7 @@ class Scale:
     def tare(self):
         try:
             self.device.write(b'ST\r\n')
+            time.sleep(2)
         except Exception as e:
             QMessageBox.critical(None, 'Error', {e})
             
@@ -23,7 +25,7 @@ class Scale:
     def get_weight(self):
         try:
             if self.device:
-                weight = self.device.read(64)
+                weight = self.device.read(16)
                 return self.parse_weight(weight)
             else:
                 return "Scale not found"
@@ -35,11 +37,11 @@ class Scale:
         if not data or len(data) < 16:
             return None
 
-        sign = data[0:1].decode('latin-1')
-        weight = data[2:10].decode('latin-1')
+        sign = data[0:1].decode('latin-1').strip()
+        weight = data[1:9].decode('latin-1').strip()
         unit1 = data[11:12].decode('latin-1')
         unit2 = data[12:13].decode('latin-1')
 
-        self.weight = float(weight)
+        self.weight = sign + weight
         
-        return str(self.weight) + ' ' + unit1 + unit2
+        return self.weight + ' ' + unit1 + unit2

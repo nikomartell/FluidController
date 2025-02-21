@@ -185,16 +185,7 @@ class App(QWidget):
             self.execute_button.clicked.connect(self.execute)
         
     def tare(self):
-        if self.weight_thread._is_running:
-            self.weight_thread.quit()
-        if self.graph_thread._is_running:
-            self.graph_thread.quit()
-        self.weight_thread = WeightThread(self.device.scale)
-        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
-        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
-        self.device.scale.weight = 0.00
-        self.weight_thread.start()
-        self.graph_thread.start()
+        self.weight_thread.tare()
     
     # Files and Settings ----------- #
     

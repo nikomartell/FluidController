@@ -38,7 +38,6 @@ class AnalysisCenter(QWidget):
         
         self.tareScale = QPushButton('Tare Scale', self.Container)
         self.tareScale.setObjectName('tare')
-        self.tareScale.clicked.connect(controller.scale.tare)
         weight_layout.addWidget(self.tareScale, alignment=Qt.AlignmentFlag.AlignRight)
         
         top_layout.addWidget(self.graph_widget)
