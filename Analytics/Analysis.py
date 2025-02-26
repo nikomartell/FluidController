@@ -1,14 +1,8 @@
-import sys
-from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QComboBox, QHBoxLayout
-from PyQt6.QtGui import QDoubleValidator
-from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QObject
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt6.QtCore import Qt
 
 class AnalysisCenter(QWidget):
-    def __init__(self, controller):
+    def __init__(self):
         
         self.Container = QWidget()
         self.Container.setObjectName('AnalysisCenter')

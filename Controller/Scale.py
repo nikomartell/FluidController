@@ -10,8 +10,7 @@ class Scale:
             self.device.getDeviceInfo()
             self.weight = 0.00
         except:
-            self.device = None
-            print('Scale not found')  
+            self.device = None 
 
     # Function called by Control Panel to tare the scale
     def tare(self):

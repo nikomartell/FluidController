@@ -1,10 +1,8 @@
 import sys
-import time
 from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use('QtAgg')
 import numpy as np
-import serial
 from Controller.Controller import Controller
 from ControlCenter import controlCenter
 from PyQt6.QtWidgets import *
@@ -26,7 +24,7 @@ class App(QWidget):
         self.device = self.connections.con
         
         self.fig, self.ax = plt.subplots()
-        self.graph, = self.ax.plot(np.arange(10), np.arange(10))
+        self.graph, = self.ax.plot(np.arange(5), np.arange(5))
         plt.ion()
         
         self.initUI()
@@ -44,6 +42,7 @@ class App(QWidget):
         
         self.draw_errorLayout()
         self.layout.addLayout(self.errorLayout)
+        
         #---------------------------------------------------------#
 
         # Window Action Items
@@ -86,12 +85,25 @@ class App(QWidget):
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
 
-        self.motor_task = MotorThread(self.device, self.deviceControl.get_commands())
+        # These are the threads for each of the components.
+        # Communication with components should be done through threads to prevent UI freezing.
+        self.motor_thread = MotorThread(controller = self.device, command_set = self.deviceControl.get_commands())
         self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
+        self.weight_thread = WeightThread(scale = self.device.scale)
         
-        
+        # If the scale is connected, start the collecting and plotting data (for testing)
         if self.device.scale.device is not None:
+            self.weight_thread.start()
             self.graph_thread.start()
+        
+        # Analysis Center
+        self.analysis_layout = QVBoxLayout()
+        self.analysisCenter = AnalysisCenter()
+        self.graph_widget = QWidget(self.analysisCenter.Container)
+        self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
+        self.analysis_layout.addWidget(self.analysisCenter.Container)
+        self.analysisCenter.tareScale.clicked.connect(self.tare)
+        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
         
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
@@ -100,25 +112,16 @@ class App(QWidget):
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
-        # Analysis Center
-        
-        self.analysis_layout = QVBoxLayout()
-        self.analysisCenter = AnalysisCenter(self.device)
-        self.graph_widget = QWidget(self.analysisCenter.Container)
-        self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
-        self.analysis_layout.addWidget(self.analysisCenter.Container)
-        
-        self.weight_thread = WeightThread(self.device.scale)
-        self.weight_thread.start()
-        self.analysisCenter.tareScale.clicked.connect(self.tare)
-        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
-        
         self.layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)
         self.layout.addLayout(button_layout)
         
         self.setLayout(self.layout)
-    
+
+        # Connection Signals
+        # UI Elements are updated based on the connection status of the device
+        self.connections.signals.connected.connect(self.draw_errorLayout)
+        self.connections.signals.connected.connect(self.draw_execute_button)
     
     #---------------------------------------------------------#
     
@@ -129,12 +132,12 @@ class App(QWidget):
             QMessageBox.critical(self, 'Error', 'Controller not found')
             return
         commands = self.deviceControl.get_commands()
-        self.motor_task = MotorThread(self.device, commands)
-        self.motor_task.signals.finished.connect(self.draw_execute_button, self.graph_thread.quit)
+        self.motor_thread = MotorThread(self.device, commands)
+        self.motor_thread.signals.finished.connect(self.draw_execute_button, self.graph_thread.quit)
         if self.graph_thread._is_running:
             self.graph_thread.quit()
         self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
-        self.motor_task.start()
+        self.motor_thread.start()
         self.graph_thread.start()
         self.draw_execute_button()
     
@@ -168,15 +171,15 @@ class App(QWidget):
             self.execute_button.setToolTip('Controller not found')
             self.execute_button.setText('Controller not found')
         
-        elif self.motor_task._is_running == True:
+        elif self.motor_thread._is_running == True:
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: red;')
             self.execute_button.setToolTip('STOP MOTOR')
             self.execute_button.setText('STOP MOTOR')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.motor_task.quit)    
+            self.execute_button.clicked.connect(self.motor_thread.quit)    
         
-        elif (self.device.module is not None) and (self.motor_task._is_running == False):
+        elif (self.device.module is not None) and (self.motor_thread._is_running == False):
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: #0B41CD;')
             self.execute_button.setToolTip('Execute Commands')
@@ -212,10 +215,10 @@ class App(QWidget):
 
 if __name__ == '__main__':
     def close_threads():
-        ex.connections.quit()
-        ex.motor_task.quit()
-        ex.graph_thread.quit()
         ex.weight_thread.quit()
+        ex.motor_thread.quit()
+        ex.connections.quit()
+        ex.graph_thread.quit()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)

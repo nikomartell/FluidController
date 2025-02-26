@@ -27,6 +27,8 @@ class WeightThread(QThread):
         finally:
             self.signals.finished.emit()
     
+    # This is the primary way to tare the scale.
+    # Using it directly through the scale can freeze the UI
     def tare(self):
         try:
             self.scale.tare()

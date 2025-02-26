@@ -1,13 +1,8 @@
-import os
 from ftd2xx import ftd2xx as ftd
-import serial.tools.list_ports
-import pytrinamic
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
-from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QDeadlineTimer, QObject
 from Controller.Scale import Scale
-from Controller.MotorThread import MotorThread
         
 class Controller(QObject):
     def __init__(self):

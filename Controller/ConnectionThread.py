@@ -1,7 +1,9 @@
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread
 from pytrinamic.connections import ConnectionManager
+from pytrinamic.modules import TMCM3110
 from Controller.Controller import Controller
+from Controller.Scale import Scale
 import time, traceback, sys
 
 class ConnectionThread(QThread):
@@ -10,19 +12,40 @@ class ConnectionThread(QThread):
         super().__init__()
         self.con = Controller()
         self.signals = ConnectionSignal()
-        self.interface = ConnectionManager()
+        self.connection_manager = ConnectionManager()
         self._is_running = True
         
         
     def run(self):
         try:
-            # While Connection is not established, keep trying to connect
             while self._is_running:
-                if self.con.module is None:
-                    self.con = Controller()
-                    time.sleep(2)
-                else:
-                    self.signals.connected.emit()
+                # While no Connections are established, keep trying to connect
+                while not self.con.module or not self.con.scale.device:
+                    # If neither the module nor the scale are connected, try to connect to both
+                    if not self.con.module and not self.con.scale.device:
+                        try:
+                            self.con = Controller()
+                        except:
+                            pass
+                    # If one is not connected, try to connect to it.
+                    else:
+                        if not self.con.module:
+                            try:
+                                interface = self.connection_manager.connect()
+                                self.con.module = TMCM3110(interface)
+                                self.con.linear = self.con.module.motors[0]
+                                self.con.rotary = self.con.module.motors[1]
+                                self.con.linear.stop()
+                                self.con.rotary.stop()
+                            except:
+                                pass
+                        if not self.con.scale.device:
+                            self.con.scale = Scale()
+                        self.signals.connected.emit()
+                    time.sleep(1)
+                    if not self._is_running:
+                        break
+                if not self._is_running:
                     break
                 
         except:
