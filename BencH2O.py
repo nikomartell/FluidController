@@ -1,6 +1,7 @@
 import sys
 from matplotlib import pyplot as plt
 import matplotlib
+import pandas as pd
 matplotlib.use('QtAgg')
 import numpy as np
 from Controller.Controller import Controller
@@ -22,12 +23,12 @@ class App(QWidget):
         self.connections = ConnectionThread()
         self.connections.start()
         self.device = self.connections.con
-        
+        self.data = pd.DataFrame(columns=['Time', 'Weight'])
         self.fig, self.ax = plt.subplots()
-        self.graph, = self.ax.plot(np.arange(5), np.arange(5))
-        plt.ion()
-        
+        self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
+        self.ax.autoscale(enable=True, axis='both')
         self.initUI()
+        
         
     
     def initUI(self):
@@ -90,11 +91,16 @@ class App(QWidget):
         self.motor_thread = MotorThread(controller = self.device, command_set = self.deviceControl.get_commands())
         self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
         self.weight_thread = WeightThread(scale = self.device.scale)
+        self.graph_thread.signals.result.connect(self.update_graph)
+        
+        self.data = self.graph_thread.data # Data is updated in the graph thread
         
         # If the scale is connected, start the collecting and plotting data (for testing)
         if self.device.scale.device is not None:
             self.weight_thread.start()
             self.graph_thread.start()
+        plt.ion()
+        
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
@@ -103,6 +109,9 @@ class App(QWidget):
         self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
         self.analysis_layout.addWidget(self.analysisCenter.Container)
         self.analysisCenter.tareScale.clicked.connect(self.tare)
+        if self.device.scale.device is None:
+            self.analysisCenter.weightLabel.setText('Scale not found')
+            self.analysisCenter.tareScale.setEnabled(False)
         self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
         
         self.execute_button = QPushButton('Execute', self)
@@ -122,6 +131,7 @@ class App(QWidget):
         # UI Elements are updated based on the connection status of the device
         self.connections.signals.connected.connect(self.draw_errorLayout)
         self.connections.signals.connected.connect(self.draw_execute_button)
+        self.connections.signals.connected.connect(self.draw_analysis)
     
     #---------------------------------------------------------#
     
@@ -146,23 +156,20 @@ class App(QWidget):
     def draw_errorLayout(self):
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        if self.device is not None:
-            self.pump_info_label = QLabel(f'Component Status:', self)
-            self.pump_info_label.setStyleSheet('color: green; font-weight: bold;')
-            self.pump_info_label.setObjectName('device_info')
-            self.errorLayout.addWidget(self.pump_info_label, alignment=Qt.AlignmentFlag.AlignTop)
-            for error in self.device.errors:
-                if error is not None:
-                    self.error_label = QLabel(error, self)
-                    self.error_label.setStyleSheet('color: red; font-weight: bold;')
-                    self.error_label.setObjectName('device_info')
-                    self.errorLayout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignTop)
-            
-        if not self.device:
-            error_label = QLabel('Controller not found', self)
-            error_label.setStyleSheet('color: red; font-weight: bold;')
-            error_label.setObjectName('device_info')
-            self.errorLayout.addWidget(error_label, alignment=Qt.AlignmentFlag.AlignTop)
+        for error in self.device.errors:
+            if error is not None:
+                self.error_label = QLabel(error, self)
+                self.error_label.setStyleSheet('color: red; font-weight: bold;')
+                self.error_label.setObjectName('device_info')
+                self.errorLayout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignTop)
+    
+    def draw_analysis(self):
+        if self.device.scale.device is None:
+            self.analysisCenter.weightLabel.setText('Scale not found')
+            self.analysisCenter.tareScale.setEnabled(False)
+        else:
+            self.analysisCenter.weightLabel.setText('0.00')
+            self.analysisCenter.tareScale.setEnabled(True)
     
     def draw_execute_button(self):
         if self.device.module is None:
@@ -189,8 +196,14 @@ class App(QWidget):
         
     def tare(self):
         self.weight_thread.tare()
-    
-    # Files and Settings ----------- #
+
+    def update_graph(self):
+        x = self.data['Time']
+        y = self.data['Weight']
+        self.graph.set_data(x, y)
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.fig.canvas.draw_idle()
     
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
