@@ -16,14 +16,21 @@ from Analytics.Analysis import AnalysisCenter
 from Analytics.GraphThread import GraphThread
 from Analytics.WeightThread import WeightThread
 import csv
+import os
 
 class App(QWidget):
     def __init__(self):        
         super().__init__()
+        
+        # Device Connection
         self.connections = ConnectionThread()
         self.connections.start()
         self.device = self.connections.con
+        
+        # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
+        
+        # Graph Setup
         self.fig, self.ax = plt.subplots()
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
@@ -55,8 +62,11 @@ class App(QWidget):
         export_action.triggered.connect(self.store_commands_to_csv)
         import_action = QAction('Import Config', self)
         import_action.triggered.connect(self.import_commands_from_csv)
+        export_data_action = QAction('Export Data', self)
+        export_data_action.triggered.connect(self.export_data_to_csv)
         file_menu.addAction(export_action)
         file_menu.addAction(import_action)
+        file_menu.addAction(export_data_action)
         
         
         #Settings Menu
@@ -89,18 +99,13 @@ class App(QWidget):
         # These are the threads for each of the components.
         # Communication with components should be done through threads to prevent UI freezing.
         self.motor_thread = MotorThread(controller = self.device, command_set = self.deviceControl.get_commands())
-        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
+        self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
         self.weight_thread = WeightThread(scale = self.device.scale)
         self.graph_thread.signals.result.connect(self.update_graph)
         
-        self.data = self.graph_thread.data # Data is updated in the graph thread
         
-        # If the scale is connected, start the collecting and plotting data (for testing)
-        if self.device.scale.device is not None:
-            self.weight_thread.start()
-            self.graph_thread.start()
+        self.data = self.graph_thread.data # Data is updated in the graph thread    
         plt.ion()
-        
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
@@ -132,6 +137,9 @@ class App(QWidget):
         self.connections.signals.connected.connect(self.draw_errorLayout)
         self.connections.signals.connected.connect(self.draw_execute_button)
         self.connections.signals.connected.connect(self.draw_analysis)
+        
+        # Testing Area. Commment out contents before use #
+        # self.graph_thread.start()
     
     #---------------------------------------------------------#
     
@@ -143,13 +151,17 @@ class App(QWidget):
             return
         commands = self.deviceControl.get_commands()
         self.motor_thread = MotorThread(self.device, commands)
-        self.motor_thread.signals.finished.connect(self.draw_execute_button, self.graph_thread.quit)
+        self.motor_thread.signals.finished.connect(self.draw_execute_button)
+        self.motor_thread.signals.finished.connect(self.graph_thread.quit)
         if self.graph_thread._is_running:
             self.graph_thread.quit()
-        self.graph_thread = GraphThread(0, self.device.scale, graph = self.graph)
+        self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
         self.motor_thread.start()
         self.graph_thread.start()
         self.draw_execute_button()
+    
+    def tare(self):
+        self.weight_thread.tare()
     
     # Update Layouts ----------- #
     
@@ -163,14 +175,18 @@ class App(QWidget):
                 self.error_label.setObjectName('device_info')
                 self.errorLayout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignTop)
     
+    
+    # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):
         if self.device.scale.device is None:
             self.analysisCenter.weightLabel.setText('Scale not found')
             self.analysisCenter.tareScale.setEnabled(False)
         else:
-            self.analysisCenter.weightLabel.setText('0.00')
+            self.weight_thread.start()
             self.analysisCenter.tareScale.setEnabled(True)
     
+    
+    # Update Execute Button based on connection and current state ----------- #
     def draw_execute_button(self):
         if self.device.module is None:
             self.execute_button.setEnabled(False)
@@ -193,10 +209,9 @@ class App(QWidget):
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
-        
-    def tare(self):
-        self.weight_thread.tare()
-
+    
+    
+    # Update Graph ----------- #
     def update_graph(self):
         x = self.data['Time']
         y = self.data['Weight']
@@ -204,6 +219,8 @@ class App(QWidget):
         self.ax.relim()
         self.ax.autoscale_view()
         self.fig.canvas.draw_idle()
+    
+    #---------------------------------------------------------#
     
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
@@ -223,15 +240,29 @@ class App(QWidget):
                 commands = [row[0] for row in command_reader if row]
                 self.deviceControl.set_commands(commands)
             QMessageBox.information(self, 'Success', f'Commands imported from {file_name}')
+            
+    def export_data_to_csv(self):
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save Data to CSV", "", "CSV Files (*.csv);;All Files (*)")
+        if file_name:
+            self.data.to_csv(file_name)
+            QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
+    
+    def failsafe_data_csv(self):
+        try:
+            filepath = os.path.join(os.getcwd(), 'data.csv')
+            self.data.to_csv(filepath)
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
 
     #---------------------------------------------------------#
 
 if __name__ == '__main__':
     def close_threads():
+        ex.graph_thread.quit()
         ex.weight_thread.quit()
         ex.motor_thread.quit()
         ex.connections.quit()
-        ex.graph_thread.quit()
+        ex.failsafe_data_csv()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)

@@ -27,14 +27,15 @@ class Scale:
                 weight = self.device.read(16)
                 return self.parse_weight(weight)
             else:
-                return "Scale not found"
+                return 0.00
+
         except Exception as e:
             return f'Error: {e}'
         
     # Function to read the bytes from the scale and decode the data of it to legible weight
     def parse_weight(self, data):
         if not data or len(data) < 16:
-            return None
+            return 0.00
 
         sign = data[0:1].decode('latin-1').strip()
         weight = data[1:9].decode('latin-1').strip()
