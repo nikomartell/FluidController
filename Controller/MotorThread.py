@@ -28,6 +28,7 @@ class MotorThread(QThread):
         # Move the motor to Default position
         try:
             print(self.motor.drive_settings)
+            self.signals.running.emit()
             while self.command_set.iterations > 0 and self._is_running:
                 
                 if self.motor.actual_position != 0:
@@ -37,12 +38,14 @@ class MotorThread(QThread):
                             self.motor.stop()
                             break
                         time.sleep(0.1)
+                        
                 
                 time.sleep(1)
                 if not self._is_running:
                     break
                 
                 start_time = time.time()
+                self.signals.start.emit()
                 while time.time() - start_time < self.command_set.duration and self._is_running:
                     self.task()
                     time.sleep(0.1)
@@ -57,6 +60,7 @@ class MotorThread(QThread):
             print(f'Error: {e}')
         finally:
             if self._is_running:
+                self._is_running = False
                 print('Motor Thread Finished')
                 self.signals.finished.emit()
             else:
@@ -77,3 +81,5 @@ class MotorSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
+    running = pyqtSignal()
+    start = pyqtSignal()

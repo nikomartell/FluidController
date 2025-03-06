@@ -20,31 +20,12 @@ class ConnectionThread(QThread):
         try:
             while self._is_running:
                 # While no Connections are established, keep trying to connect
-                while not self.con.module or not self.con.scale.device:
-                    # If neither the module nor the scale are connected, try to connect to both
-                    if not self.con.module and not self.con.scale.device:
-                        try:
-                            self.con = Controller()
-                        except:
-                            pass
-                    # If one is not connected, try to connect to it.
-                    else:
-                        if not self.con.module:
-                            try:
-                                interface = self.connection_manager.connect()
-                                self.con.module = TMCM3110(interface)
-                                self.con.linear = self.con.module.motors[0]
-                                self.con.rotary = self.con.module.motors[1]
-                                self.con.linear.stop()
-                                self.con.rotary.stop()
-                            except:
-                                pass
-                        if not self.con.scale.device:
-                            self.con.scale = Scale()
-                        self.signals.connected.emit()
-                    time.sleep(1)
-                    if not self._is_running:
-                        break
+                if not self.con.module:
+                    self.con = Controller()
+                    time.sleep(2)
+                else:
+                    self.signals.connected.emit()
+                    break
                 if not self._is_running:
                     break
                 

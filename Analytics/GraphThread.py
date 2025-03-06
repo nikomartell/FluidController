@@ -6,14 +6,14 @@ import pandas as pd
 
 class GraphThread(QThread):
     
-    def __init__(self, scale, graph, point = 2):
+    def __init__(self, scale, graph, precision = 2):
         super().__init__()
         self.signals = GraphSignal()
         self._is_running = True
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
         self.scale = scale
         self.graph = graph
-        self.precision = point
+        self.precision = precision
         
     # X is time, Y is weight
     def run(self):
@@ -26,7 +26,7 @@ class GraphThread(QThread):
             while self._is_running:
                 self.x += interval
                 self.x = round(self.x, self.precision)
-                self.data.loc[self.x] = [self.x, self.scale.get_weight()]
+                self.data.loc[self.x] = [self.x, self.scale.weight]
                 self.signals.result.emit()
                 time.sleep(interval)
                 

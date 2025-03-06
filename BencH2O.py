@@ -29,6 +29,7 @@ class App(QWidget):
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
+        self.threadManager = []
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
@@ -98,7 +99,6 @@ class App(QWidget):
 
         # These are the threads for each of the components.
         # Communication with components should be done through threads to prevent UI freezing.
-        self.motor_thread = MotorThread(controller = self.device, command_set = self.deviceControl.get_commands())
         self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
         self.weight_thread = WeightThread(scale = self.device.scale)
         self.graph_thread.signals.result.connect(self.update_graph)
@@ -117,12 +117,16 @@ class App(QWidget):
         if self.device.scale.device is None:
             self.analysisCenter.weightLabel.setText('Scale not found')
             self.analysisCenter.tareScale.setEnabled(False)
+        else:
+            self.weight_thread.start()
+            self.analysisCenter.tareScale.setEnabled(True)
         self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
         
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.execute_button.clicked.connect(self.execute)
+        self.motor_thread = MotorThread(controller = self.device, command_set = self.get_commands())
+        self.execute_button.clicked.connect(self.motor_thread.start)
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
@@ -138,6 +142,10 @@ class App(QWidget):
         self.connections.signals.connected.connect(self.draw_execute_button)
         self.connections.signals.connected.connect(self.draw_analysis)
         
+        self.motor_thread.signals.running.connect(self.draw_execute_button)
+        self.motor_thread.signals.start.connect(self.graph_thread.start)
+        self.motor_thread.signals.finished.connect(self.draw_execute_button)
+        self.motor_thread.signals.finished.connect(self.graph_thread.quit)
         # Testing Area. Commment out contents before use #
         # self.graph_thread.start()
     
@@ -145,20 +153,9 @@ class App(QWidget):
     
     # Methods ---------- #
     
-    def execute(self):
-        if self.device is None:
-            QMessageBox.critical(self, 'Error', 'Controller not found')
-            return
-        commands = self.deviceControl.get_commands()
-        self.motor_thread = MotorThread(self.device, commands)
-        self.motor_thread.signals.finished.connect(self.draw_execute_button)
-        self.motor_thread.signals.finished.connect(self.graph_thread.quit)
-        if self.graph_thread._is_running:
-            self.graph_thread.quit()
-        self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
-        self.motor_thread.start()
-        self.graph_thread.start()
-        self.draw_execute_button()
+    def get_commands(self):
+        return self.deviceControl.get_commands()
+        
     
     def tare(self):
         self.weight_thread.tare()
@@ -208,7 +205,7 @@ class App(QWidget):
             self.execute_button.setToolTip('Execute Commands')
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.execute)
+            self.execute_button.clicked.connect(self.motor_thread.start)
     
     
     # Update Graph ----------- #

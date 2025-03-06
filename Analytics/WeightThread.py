@@ -4,22 +4,24 @@ import time
 from PyQt6.QtCore import QThread, pyqtSignal, QObject
 
 class WeightThread(QThread):
-    def __init__(self, scale):
+    def __init__(self, scale, precision = 1):
         super().__init__()
         self.scale = scale
         self.signals = WeightSignal()
         self.weight = 0.00
         self._is_running = True
+        self.precision = precision
 
     def quit(self):
         self._is_running = False
 
     def run(self):
+        interval = 10 ** -self.precision
         try:
             while self._is_running:
                 if self.scale.device:
                     self.signals.result.emit(self.scale.get_weight())
-                    time.sleep(0.001)
+                    time.sleep(interval)
                 if not self._is_running:
                     break
         except Exception as e:

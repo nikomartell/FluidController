@@ -26,7 +26,7 @@ class Scale:
             if self.device:
                 weight = self.device.read(16)
                 return self.parse_weight(weight)
-            else:
+            elif self.device is None:
                 return 0.00
 
         except Exception as e:
@@ -42,6 +42,6 @@ class Scale:
         unit1 = data[11:12].decode('latin-1')
         unit2 = data[12:13].decode('latin-1')
 
-        self.weight = sign + weight
+        self.weight = float(weight)
         
-        return self.weight + ' ' + unit1 + unit2
+        return sign + weight + ' ' + unit1 + unit2
