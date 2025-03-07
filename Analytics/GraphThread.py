@@ -14,7 +14,7 @@ class GraphThread(QThread):
         self.scale = scale
         self.graph = graph
         self.precision = precision
-        
+    
     # X is time, Y is weight
     def run(self):
         try:

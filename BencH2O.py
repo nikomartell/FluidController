@@ -29,7 +29,7 @@ class App(QWidget):
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
-        self.threadManager = []
+        self.threadpool = QThreadPool()
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
@@ -101,6 +101,7 @@ class App(QWidget):
         # Communication with components should be done through threads to prevent UI freezing.
         self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
         self.weight_thread = WeightThread(scale = self.device.scale)
+        self.motor_thread = MotorThread(controller = self.device, command_set = self.get_commands())
         self.graph_thread.signals.result.connect(self.update_graph)
         
         
@@ -125,7 +126,6 @@ class App(QWidget):
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.motor_thread = MotorThread(controller = self.device, command_set = self.get_commands())
         self.execute_button.clicked.connect(self.motor_thread.start)
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
