@@ -5,14 +5,14 @@ import pandas as pd
 matplotlib.use('QtAgg')
 import numpy as np
 from Controller.Controller import Controller
-from ControlCenter import controlCenter
+from Interface.ControlCenter import controlCenter
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
-from CommandSet import CommandSet
+from Controller.CommandSet import CommandSet
 from Controller.ConnectionThread import ConnectionThread
 from Controller.MotorThread import MotorThread
-from Analytics.Analysis import AnalysisCenter
+from Interface.Analysis import AnalysisCenter
 from Analytics.GraphThread import GraphThread
 from Analytics.WeightThread import WeightThread
 import csv

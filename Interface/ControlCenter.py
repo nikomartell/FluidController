@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QLineEdit, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QComboBox, QHBoxLayout
 from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtCore import QTimer, Qt
-from CommandSet import CommandSet
+from Controller.CommandSet import CommandSet
 
 class controlCenter(QWidget):
     def __init__(self):

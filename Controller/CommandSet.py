@@ -1,4 +1,4 @@
-import Analytics.calcs as calcs
+import Interface.calcs as calcs
 
 class CommandSet:
     def __init__(self, component="Rotary Motor", flowRate=500, strokes=10, acceleration=10, flowDirection="Dispense", duration=3, iterations=1):
