@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import QRunnable, pyqtSignal, QObject, QThread
 import time
 
-class MotorThread(QRunnable):
+class MotorThread(QThread):
 
     def __init__(self, controller, command_set):
         super().__init__()
