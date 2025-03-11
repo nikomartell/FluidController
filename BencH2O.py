@@ -4,17 +4,18 @@ import matplotlib
 import pandas as pd
 matplotlib.use('QtAgg')
 import numpy as np
-from Controller.Controller import Controller
-from Interface.ControlCenter import controlCenter
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
+from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
 from Controller.ConnectionThread import ConnectionThread
 from Controller.MotorThread import MotorThread
-from Interface.Analysis import AnalysisCenter
 from Analytics.GraphThread import GraphThread
 from Analytics.WeightThread import WeightThread
+from Interface.Style import apply_style
+from Interface.Analysis import AnalysisCenter
+from Interface.ControlCenter import controlCenter
 import csv
 import os
 
@@ -42,8 +43,7 @@ class App(QWidget):
     def initUI(self):
         
         # Stylesheet
-        with open("main.css", "r") as file:
-            self.setStyleSheet(file.read())
+        apply_style(self)
         
         # Setup
         self.setWindowTitle('Fluidics Device Controller')
