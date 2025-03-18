@@ -9,15 +9,14 @@ https://doc.qt.io/qtforpython-5/PySide2/QtCore/QThreadPool.html
 
 
 # To-Do
-    - Ensure interruptions are properly handled
-        - Force Stop Motor, Closing the window, etc.
-    - Implement the Weight Scale
-        - Hopefully just getting the drivers will do that
     - Refactor how Motors are handled
-        - Both can be used simultaneously, so allow the user to put commands for one or both.
+        - Rotary ONLY adjusts volume per rotation (Vpr)
+        - Command set should only apply to Linear Motor
     - Reconsider how the Command Set is structured
         - Certain parameters are not needed / complex.
     - Start working on Calcs for correct measurements
         - Mainly for flowRate
     - Implement sequential sets
         - Probably can just set it as an array of CommandSets
+
+# Build with "auto-py-to-exe" in console
