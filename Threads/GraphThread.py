@@ -1,18 +1,18 @@
 import sys
-from PyQt6.QtCore import QThread, pyqtSignal, QObject
+from PyQt6.QtCore import QRunnable, pyqtSignal, QObject
+from Controller.Scale import Scale
 import time
 import traceback
 import pandas as pd
 
-class GraphThread(QThread):
+class GraphThread(QObject, QRunnable):
     
-    def __init__(self, scale, graph, precision = 2):
+    def __init__(self, scale = Scale(), precision = 2):
         super().__init__()
         self.signals = GraphSignal()
         self._is_running = True
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
         self.scale = scale
-        self.graph = graph
         self.precision = precision
     
     # X is time, Y is weight
@@ -35,8 +35,7 @@ class GraphThread(QThread):
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         finally:
-            if self._is_running:
-                self.signals.finished.emit()
+            self.signals.finished.emit()
         
     def quit(self):
         self._is_running = False

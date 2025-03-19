@@ -11,6 +11,7 @@ class Scale:
             self.weight = 0.00
         except:
             self.device = None 
+            self.weight = 0.00
 
     # Function called by Control Panel to tare the scale
     def tare(self):

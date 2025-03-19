@@ -9,10 +9,11 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
 from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
-from Controller.ConnectionThread import ConnectionThread
-from Controller.MotorThread import MotorThread
-from Analytics.GraphThread import GraphThread
-from Analytics.WeightThread import WeightThread
+from Threads.ConnectionThread import ConnectionThread
+from Threads.MotorThread import MotorThread
+from Threads.GraphThread import GraphThread
+from Threads.WeightThread import WeightThread
+from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
 from Interface.Analysis import AnalysisCenter
 from Interface.ControlCenter import controlCenter
@@ -24,13 +25,14 @@ class App(QWidget):
         super().__init__()
         
         # Device Connection
-        self.connections = ConnectionThread()
-        self.connections.start()
-        self.device = self.connections.con
+        self.device = Controller()
+        self.weight_thread = WeightThread()
+        self.threadpool = ThreadPool()
+        self.threadpool.start_connection()
+        self.threadpool.connection_thread.signals.result.connect(lambda con: set_device(con))
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
-        self.threadpool = QThreadPool()
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
@@ -38,7 +40,10 @@ class App(QWidget):
         self.ax.autoscale(enable=True, axis='both')
         self.initUI()
         
-        
+        def set_device(con):
+            self.device = con
+            self.weight_thread.scale = con.scale
+            
     
     def initUI(self):
         
@@ -99,14 +104,7 @@ class App(QWidget):
 
         # These are the threads for each of the components.
         # Communication with components should be done through threads to prevent UI freezing.
-        self.graph_thread = GraphThread(self.device.scale, graph = self.graph)
-        self.weight_thread = WeightThread(scale = self.device.scale)
-        self.motor_thread = MotorThread(controller = self.device, command_set = self.get_commands())
-        self.graph_thread.signals.result.connect(self.update_graph)
-        
-        
-        self.data = self.graph_thread.data # Data is updated in the graph thread    
-        plt.ion()
+        self.threadpool.graph_thread.signals.result.connect(self.update_graph)
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
@@ -126,7 +124,7 @@ class App(QWidget):
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.execute_button.clicked.connect(self.motor_thread.start)
+        self.execute_button.clicked.connect(lambda: self.threadpool.start_motor(self.get_commands()))
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
@@ -138,14 +136,12 @@ class App(QWidget):
 
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
-        self.connections.signals.connected.connect(self.draw_errorLayout)
-        self.connections.signals.connected.connect(self.draw_execute_button)
-        self.connections.signals.connected.connect(self.draw_analysis)
+        self.threadpool.connection_thread.signals.connected.connect(self.draw_errorLayout)
+        self.threadpool.connection_thread.signals.connected.connect(self.draw_execute_button)
+        self.threadpool.connection_thread.signals.connected.connect(self.draw_analysis)
         
-        self.motor_thread.signals.running.connect(self.draw_execute_button)
-        self.motor_thread.signals.start.connect(self.graph_thread.start)
-        self.motor_thread.signals.finished.connect(self.draw_execute_button)
-        self.motor_thread.signals.finished.connect(self.graph_thread.quit)
+        self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
+        self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
         # Testing Area. Commment out contents before use #
         # self.graph_thread.start()
     
@@ -197,7 +193,7 @@ class App(QWidget):
             self.execute_button.setToolTip('STOP MOTOR')
             self.execute_button.setText('STOP MOTOR')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.motor_thread.quit)    
+            self.execute_button.clicked.connect(self.threadpool.stop)    
         
         elif (self.device.module is not None) and (self.motor_thread._is_running == False):
             self.execute_button.setEnabled(True)
@@ -205,11 +201,12 @@ class App(QWidget):
             self.execute_button.setToolTip('Execute Commands')
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.motor_thread.start)
+            self.execute_button.clicked.connect(self.threadpool.start_motor(self.get_commands()))
     
     
     # Update Graph ----------- #
     def update_graph(self):
+        self.data = self.threadpool.graph_thread.data
         x = self.data['Time']
         y = self.data['Weight']
         self.graph.set_data(x, y)
@@ -255,10 +252,9 @@ class App(QWidget):
 
 if __name__ == '__main__':
     def close_threads():
-        ex.graph_thread.quit()
+        ex.threadpool.stop()
         ex.weight_thread.quit()
-        ex.motor_thread.quit()
-        ex.connections.quit()
+        ex.connection_thread.quit()
         ex.failsafe_data_csv()
     
     app = QApplication(sys.argv)

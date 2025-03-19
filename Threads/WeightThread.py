@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import QMessageBox
 from ftd2xx import ftd2xx as ftd
+from Controller.Scale import Scale
 import time
-from PyQt6.QtCore import QThread, pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject, QRunnable
 
-class WeightThread(QThread):
-    def __init__(self, scale, precision = 1):
+class WeightThread(QObject, QRunnable):
+    def __init__(self, scale = Scale(), precision = 1):
         super().__init__()
         self.scale = scale
         self.signals = WeightSignal()
