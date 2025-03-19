@@ -124,7 +124,7 @@ class App(QWidget):
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.execute_button.clicked.connect(lambda: self.threadpool.start_motor(self.get_commands()))
+        self.execute_button.clicked.connect(lambda: self.threadpool.start_process(self.get_commands()))
         self.draw_execute_button()        
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
@@ -181,12 +181,14 @@ class App(QWidget):
     
     # Update Execute Button based on connection and current state ----------- #
     def draw_execute_button(self):
+        # If the device is not connected, disable the execute button
         if self.device.module is None:
             self.execute_button.setEnabled(False)
             self.execute_button.setStyleSheet('background-color: red;')
             self.execute_button.setToolTip('Controller not found')
             self.execute_button.setText('Controller not found')
         
+        # If the motor is running, disable the execute button
         elif self.motor_thread._is_running == True:
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: red;')
@@ -195,13 +197,14 @@ class App(QWidget):
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.threadpool.stop)    
         
+        # If the motor is not running, enable the execute button
         elif (self.device.module is not None) and (self.motor_thread._is_running == False):
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: #0B41CD;')
             self.execute_button.setToolTip('Execute Commands')
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.threadpool.start_motor(self.get_commands()))
+            self.execute_button.clicked.connect(self.threadpool.start_process(self.get_commands()))
     
     
     # Update Graph ----------- #
@@ -216,6 +219,9 @@ class App(QWidget):
     
     #---------------------------------------------------------#
     
+    # File Menu Actions
+    
+    # Export commands to CSV
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
@@ -226,6 +232,7 @@ class App(QWidget):
                     command_writer.writerow([command])
             QMessageBox.information(self, 'Success', f'Commands saved to {file_name}')
 
+    # Import commands from CSV
     def import_commands_from_csv(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Import Commands from CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
@@ -234,13 +241,15 @@ class App(QWidget):
                 commands = [row[0] for row in command_reader if row]
                 self.deviceControl.set_commands(commands)
             QMessageBox.information(self, 'Success', f'Commands imported from {file_name}')
-            
+           
+    # Export data to CSV 
     def export_data_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Data to CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
             self.data.to_csv(file_name)
             QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
     
+    # On close, save data to CSV
     def failsafe_data_csv(self):
         try:
             filepath = os.path.join(os.getcwd(), 'data.csv')
