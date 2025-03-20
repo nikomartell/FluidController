@@ -17,6 +17,7 @@ class GraphThread(QObject, QRunnable):
     
     # X is time, Y is weight
     def run(self):
+        data = pd.DataFrame(columns=['Time', 'Weight'])
         try:
             # This specifies the interval of time between each data point
             interval = 10 ** -self.precision
@@ -26,8 +27,8 @@ class GraphThread(QObject, QRunnable):
             while self._is_running:
                 self.x += interval
                 self.x = round(self.x, self.precision)
-                self.data.loc[self.x] = [self.x, self.scale.weight]
-                self.signals.result.emit()
+                data.loc[self.x] = [self.x, self.scale.weight]
+                self.signals.result.emit(data)
                 time.sleep(interval)
                 
         except:
@@ -43,4 +44,4 @@ class GraphThread(QObject, QRunnable):
 class GraphSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
-    result = pyqtSignal()
+    result = pyqtSignal(object)

@@ -104,7 +104,7 @@ class App(QWidget):
 
         # These are the threads for each of the components.
         # Communication with components should be done through threads to prevent UI freezing.
-        self.threadpool.graph_thread.signals.result.connect(self.update_graph)
+        self.threadpool.signals.data.connect(lambda data: self.update_graph(data))
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
@@ -208,8 +208,8 @@ class App(QWidget):
     
     
     # Update Graph ----------- #
-    def update_graph(self):
-        self.data = self.threadpool.graph_thread.data
+    def update_graph(self, data):
+        self.data = data
         x = self.data['Time']
         y = self.data['Weight']
         self.graph.set_data(x, y)

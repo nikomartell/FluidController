@@ -13,6 +13,7 @@ class ThreadPool(QThreadPool):
         super().__init__()
         self.setMaxThreadCount(10)
         self.threads = []
+        self.signals = ThreadPoolSignal()
         
         # Initialize Threads
         self.motor_thread = MotorThread()
@@ -54,8 +55,9 @@ class ThreadPool(QThreadPool):
         self.motor_thread.controller = self.controller
         self.motor_thread.command_set = command_set
         
-        # Set the scale for the graph thread
+        # Set the scale for the graph thread and emitting it's data
         self.graph_thread.scale = self.controller.scale
+        self.graph_thread.signals.result.connect(lambda data: self.signals.data.emit(data))
         
         # Set signal connections
         self.motor_thread.signals.start.connect(lambda: self.start(self.graph_thread))
