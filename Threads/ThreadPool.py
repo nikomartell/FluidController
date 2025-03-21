@@ -20,14 +20,17 @@ class ThreadPool(QThreadPool):
         self.graph_thread = GraphThread()
         self.connection_thread = ConnectionThread()
         self.weight_thread = WeightThread()
-        self.thread_motor = QThread()
-        self.thread_graph = QThread()
-        self.motor_thread.moveToThread(self.thread_motor)
-        self.graph_thread.moveToThread(self.thread_graph)
         
         
-    # Take a Runnable object, move it to a thread, store it in Threads list
+    # Take a Runnable object, move it to a thread, store it in Threads list if not already started
     def start(self, runnable):
+        # Check if the runnable is already associated with an existing thread
+        for thread in self.threads:
+            if thread.isRunning() and thread in runnable.thread().children():
+                thread.start()
+                return
+        
+        # If not, create a new thread and start it
         thread = QtCore.QThread()
         if isinstance(runnable, QObject):
             runnable.moveToThread(thread)
@@ -60,11 +63,11 @@ class ThreadPool(QThreadPool):
         self.graph_thread.signals.result.connect(lambda data: self.signals.log.emit(data))
         
         # Set signal connections
-        #self.motor_thread.signals.start.connect(lambda: self.start(self.graph_thread))
+        self.motor_thread.signals.start.connect(lambda: self.start(self.graph_thread))
         self.motor_thread.signals.finished.connect(self.signals.finished.emit)
         self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         
-        self.thread_motor.start()
+        self.start(self.motor_thread)
         
     
     # Set the precision of the threads
@@ -81,6 +84,7 @@ class ThreadPool(QThreadPool):
         if self.controller.scale.device:
             self.weight_thread.signals.result.connect(lambda weight: self.signals.data.emit(weight))
             self.weight_thread.start()
+
 
 class ThreadPoolSignal(QObject):
     started = pyqtSignal()
