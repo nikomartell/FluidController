@@ -2,9 +2,9 @@ from PyQt6.QtWidgets import QMessageBox
 from ftd2xx import ftd2xx as ftd
 from Controller.Scale import Scale
 import time
-from PyQt6.QtCore import pyqtSignal, QObject, QRunnable
+from PyQt6.QtCore import pyqtSignal, QObject, QThread
 
-class WeightThread(QObject, QRunnable):
+class WeightThread(QThread):
     def __init__(self, scale = Scale(), precision = 1):
         super().__init__()
         self.scale = scale
@@ -18,6 +18,7 @@ class WeightThread(QObject, QRunnable):
 
     def run(self):
         interval = 10 ** -self.precision
+        print('Weight Thread Running')
         try:
             while self._is_running:
                 if self.scale.device:

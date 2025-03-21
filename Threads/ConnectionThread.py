@@ -6,7 +6,7 @@ from Controller.Controller import Controller
 from Controller.Scale import Scale
 import time, traceback, sys
 
-class ConnectionThread(QObject, QRunnable):
+class ConnectionThread(QThread):
     
     def __init__(self):
         super().__init__()
@@ -17,15 +17,27 @@ class ConnectionThread(QObject, QRunnable):
         
     def run(self):
         con = Controller()
+        attempts = 0
         try:
             while self._is_running:
                 # While no Connections are established, keep trying to connect
-                if not con.module:
-                    con = Controller()
-                    time.sleep(2)
-                else:
-                    self.signals.result.emit(con)
+                try:
+                    interface = self.connection_manager.connect()
+                    con = Controller(interface)
+                    if interface:
+                        self.signals.result.emit(con)
+                        self.signals.connected.emit()
+                        break
+                    
+                except Exception as e:
+                    print(f'Error: {e}')
+                    
+                attempts += 1
+                if attempts == 3:
+                    self.signals.error.emit((Exception, "Connection Failed", "Could not connect to any devices."))
                     break
+                time.sleep(1)
+                    
                 if not self._is_running:
                     break
                 

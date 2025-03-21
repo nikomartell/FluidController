@@ -28,7 +28,6 @@ class App(QWidget):
         self.device = Controller()
         self.weight_thread = WeightThread()
         self.threadpool = ThreadPool()
-        self.threadpool.start_connection()
         self.threadpool.connection_thread.signals.result.connect(lambda con: set_device(con))
         
         # Data Collected
@@ -113,19 +112,13 @@ class App(QWidget):
         self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
         self.analysis_layout.addWidget(self.analysisCenter.Container)
         self.analysisCenter.tareScale.clicked.connect(self.tare)
-        if self.device.scale.device is None:
-            self.analysisCenter.weightLabel.setText('Scale not found')
-            self.analysisCenter.tareScale.setEnabled(False)
-        else:
-            self.weight_thread.start()
-            self.analysisCenter.tareScale.setEnabled(True)
-        self.weight_thread.signals.result.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
+        
         
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.execute_button.clicked.connect(lambda: self.threadpool.start_process(self.get_commands()))
-        self.draw_execute_button()        
+        self.execute_button.clicked.connect(lambda: self.execute)
+        self.draw_execute_button()
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         self.layout.addLayout(self.control_layout)
@@ -136,9 +129,9 @@ class App(QWidget):
 
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
-        self.threadpool.connection_thread.signals.connected.connect(self.draw_errorLayout)
-        self.threadpool.connection_thread.signals.connected.connect(self.draw_execute_button)
-        self.threadpool.connection_thread.signals.connected.connect(self.draw_analysis)
+        self.threadpool.connection_thread.signals.connected.connect(self.connected)
+        
+        self.threadpool.start_connection()
         
         self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
         self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
@@ -161,21 +154,20 @@ class App(QWidget):
     def draw_errorLayout(self):
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        for error in self.device.errors:
-            if error is not None:
-                self.error_label = QLabel(error, self)
-                self.error_label.setStyleSheet('color: red; font-weight: bold;')
-                self.error_label.setObjectName('device_info')
-                self.errorLayout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignTop)
-    
+        rotary_error = QLabel(self.device.errors[0])
+        linear_error = QLabel(self.device.errors[1])
+        scale_error = QLabel(self.device.errors[2])
+        self.errorLayout.addWidget(rotary_error)
+        self.errorLayout.addWidget(linear_error)
+        self.errorLayout.addWidget(scale_error)
+        
     
     # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):
         if self.device.scale.device is None:
-            self.analysisCenter.weightLabel.setText('Scale not found')
+            #self.analysisCenter.weightLabel.setText('Scale not found')
             self.analysisCenter.tareScale.setEnabled(False)
         else:
-            self.weight_thread.start()
             self.analysisCenter.tareScale.setEnabled(True)
     
     
@@ -189,7 +181,7 @@ class App(QWidget):
             self.execute_button.setText('Controller not found')
         
         # If the motor is running, disable the execute button
-        elif self.motor_thread._is_running == True:
+        elif self.threadpool.motor_thread._is_running == True:
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: red;')
             self.execute_button.setToolTip('STOP MOTOR')
@@ -198,14 +190,23 @@ class App(QWidget):
             self.execute_button.clicked.connect(self.threadpool.stop)    
         
         # If the motor is not running, enable the execute button
-        elif (self.device.module is not None) and (self.motor_thread._is_running == False):
+        elif (self.device.module is not None) and (self.threadpool.motor_thread._is_running == False):
             self.execute_button.setEnabled(True)
             self.execute_button.setStyleSheet('background-color: #0B41CD;')
             self.execute_button.setToolTip('Execute Commands')
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.threadpool.start_process(self.get_commands()))
+            self.execute_button.clicked.connect(self.execute)
     
+    def execute(self):
+        command_set = self.get_commands()
+        self.threadpool.start_process(command_set)
+    
+    def connected(self):
+        self.draw_errorLayout()
+        self.draw_execute_button()
+        self.draw_analysis()
+        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
     
     # Update Graph ----------- #
     def update_graph(self, data):
@@ -262,8 +263,8 @@ class App(QWidget):
 if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
-        ex.weight_thread.quit()
-        ex.connection_thread.quit()
+        ex.threadpool.weight_thread.quit()
+        ex.threadpool.connection_thread.quit()
         ex.failsafe_data_csv()
     
     app = QApplication(sys.argv)

@@ -8,10 +8,11 @@ class Scale:
         try:
             self.device = ftd.open(0)
             self.device.getDeviceInfo()
-            self.weight = 0.00
-        except:
+            self.weight = self.get_weight()
+        except Exception as e:
             self.device = None 
             self.weight = 0.00
+            print(f'Error: {e}')
 
     # Function called by Control Panel to tare the scale
     def tare(self):

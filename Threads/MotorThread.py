@@ -66,6 +66,7 @@ class MotorThread(QObject, QRunnable):
                 if not self._is_running:
                     break
                 time.sleep(2)
+            self._is_running = False
                 
         except Exception as e:
             print(f'Error: {e}')

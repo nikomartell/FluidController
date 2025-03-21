@@ -5,18 +5,12 @@ from PyQt6.QtCore import QDeadlineTimer, QObject
 from Controller.Scale import Scale
         
 class Controller(QObject):
-    def __init__(self):
+    def __init__(self, interface=None):
         
-        connection_manager = ConnectionManager()
-        try: 
-            interface = connection_manager.connect()
-        except Exception as e:
-            # print(f'Error: {e}')
-            interface = None
         self.name = 'Pump Controller' 
         self.module = TMCM3110(interface) if interface else None
-        self.linear = self.module.motors[0] if interface else None
-        self.rotary = self.module.motors[1] if interface else None
+        self.rotary = self.module.motors[0] if interface else None
+        self.linear = self.module.motors[1] if interface else None
         if interface:
             self.linear.stop()
             self.rotary.stop()
