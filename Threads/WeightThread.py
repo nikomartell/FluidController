@@ -5,7 +5,7 @@ import time
 from PyQt6.QtCore import pyqtSignal, QObject, QThread
 
 class WeightThread(QThread):
-    def __init__(self, scale = Scale(), precision = 1):
+    def __init__(self, scale, precision = 1):
         super().__init__()
         self.scale = scale
         self.signals = WeightSignal()

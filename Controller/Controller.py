@@ -9,8 +9,8 @@ class Controller(QObject):
         
         self.name = 'Pump Controller' 
         self.module = TMCM3110(interface) if interface else None
-        self.rotary = self.module.motors[0] if interface else None
-        self.linear = self.module.motors[1] if interface else None
+        self.linear = self.module.motors[0] if interface else None
+        self.rotary = self.module.motors[1] if interface else None
         if interface:
             self.linear.stop()
             self.rotary.stop()
@@ -29,6 +29,13 @@ class Controller(QObject):
         
         #print(self.rotary.stallguard2.get_filter())
         #print(self.rotary.stallguard2.get_threshold())
+    
+    def set_motors(self, interface):
+        self.module = TMCM3110(interface)
+        self.linear = self.module.motors[0]
+        self.rotary = self.module.motors[1]
+        self.linear.stop()
+        self.rotary.stop()
     
     
     def motor_settings(self):

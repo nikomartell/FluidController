@@ -6,6 +6,7 @@ class Scale:
     def __init__(self):
         self.name = None
         try:
+            ftd.createDeviceInfoList()
             self.device = ftd.open(0)
             self.device.getDeviceInfo()
             self.weight = self.get_weight()
@@ -27,6 +28,8 @@ class Scale:
         try:
             if self.device:
                 weight = self.device.read(16)
+                if isinstance(weight, bytes):
+                    weight = int.from_bytes(weight, byteorder='little', signed=False)
                 return self.parse_weight(weight)
             elif self.device is None:
                 return 0.00

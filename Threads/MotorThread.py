@@ -6,7 +6,7 @@ import time
 
 class MotorThread(QObject, QRunnable):
 
-    def __init__(self, controller = Controller(), command_set = CommandSet()):
+    def __init__(self, controller, command_set = CommandSet()):
         super().__init__()
         self.controller = controller
         self.command_set = command_set

@@ -7,7 +7,7 @@ import pandas as pd
 
 class GraphThread(QObject, QRunnable):
     
-    def __init__(self, scale = Scale(), precision = 2):
+    def __init__(self, scale, precision = 2):
         super().__init__()
         self.signals = GraphSignal()
         self._is_running = True

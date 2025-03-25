@@ -9,17 +9,18 @@ from Controller.Controller import Controller
 import time
 
 class ThreadPool(QThreadPool):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
         self.setMaxThreadCount(10)
         self.threads = []
         self.signals = ThreadPoolSignal()
+        self.controller = controller
+        
         
         # Initialize Threads
-        self.motor_thread = MotorThread()
-        self.graph_thread = GraphThread()
-        self.connection_thread = ConnectionThread()
-        self.weight_thread = WeightThread()
+        self.motor_thread = MotorThread(self.controller)
+        self.graph_thread = GraphThread(self.controller.scale)
+        self.connection_thread = ConnectionThread(self.controller)
         
         
     # Take a Runnable object, move it to a thread, store it in Threads list if not already started
@@ -50,8 +51,9 @@ class ThreadPool(QThreadPool):
     # Start the connection thread
     def start_connection(self):
         # Set signal connections
+        self.connection_thread = ConnectionThread(self.controller)
         self.connection_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
-        self.connection_thread.signals.result.connect(lambda con: self.found_controller(con))
+        self.connection_thread.signals.result.connect(lambda con: self.set_controller(con))
         self.connection_thread.start()
     
     # Start the motor thread
@@ -76,8 +78,8 @@ class ThreadPool(QThreadPool):
         self.graph_thread.precision = precision
     
     # When connection is established, set the controller for the motor thread and the scale for the weight thread
-    def found_controller(self, controller):
-        self.weight_thread = WeightThread()
+    def set_controller(self, controller):
+        self.weight_thread = WeightThread(self.controller.scale)
         self.controller = controller
         self.motor_thread.controller = self.controller
         self.weight_thread.scale = self.controller.scale

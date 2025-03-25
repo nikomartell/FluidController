@@ -26,9 +26,7 @@ class App(QWidget):
         
         # Device Connection
         self.device = Controller()
-        self.weight_thread = WeightThread()
-        self.threadpool = ThreadPool()
-        self.threadpool.connection_thread.signals.result.connect(lambda con: set_device(con))
+        self.threadpool = ThreadPool(self.device)
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
@@ -38,10 +36,6 @@ class App(QWidget):
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
         self.initUI()
-        
-        def set_device(con):
-            self.device = con
-            self.weight_thread.scale = con.scale
             
     
     def initUI(self):
@@ -147,7 +141,7 @@ class App(QWidget):
         
     
     def tare(self):
-        self.weight_thread.tare()
+        self.threadpool.weight_thread.tare()
     
     # Update Layouts ----------- #
     
