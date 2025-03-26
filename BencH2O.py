@@ -15,8 +15,8 @@ from Threads.GraphThread import GraphThread
 from Threads.WeightThread import WeightThread
 from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
-from Interface.Analysis import AnalysisCenter
-from Interface.ControlCenter import controlCenter
+from Interface.AnalysisCenter import AnalysisCenter
+from Interface.ControlCenter import ControlCenter
 import csv
 import os
 
@@ -89,7 +89,7 @@ class App(QWidget):
         
         # Device Control Center
         self.control_layout = QHBoxLayout()
-        self.deviceControl = controlCenter()
+        self.deviceControl = ControlCenter()
         self.control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignTop)
         
         # System Control (change this button to refresh device connection)
