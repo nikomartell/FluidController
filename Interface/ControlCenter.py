@@ -3,7 +3,7 @@ from PyQt6.QtGui import QDoubleValidator
 from PyQt6.QtCore import QTimer, Qt
 from Controller.CommandSet import CommandSet
 
-class controlCenter(QWidget):
+class ControlCenter(QWidget):
     def __init__(self):
         
         

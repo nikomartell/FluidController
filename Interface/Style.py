@@ -41,6 +41,12 @@ def apply_style(parent):
         QLabel {
             border: #f0f0f0;
         }
+        
+        QLabel#error {
+            color: #b60000;
+            font-size: 12px;
+            font-weight: bold;
+        }
 
         QLabel#device_info {
             font-size: 12px;

@@ -16,7 +16,7 @@ from Threads.WeightThread import WeightThread
 from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
 from Interface.Analysis import AnalysisCenter
-from Interface.ControlCenter import controlCenter
+from Interface.ControlCenter import ControlCenter
 import csv
 import os
 
@@ -91,12 +91,26 @@ class App(QWidget):
         self.layout.setMenuBar(menubar)
         help_action = QAction('Manual', self)
         help_menu.addAction(help_action)
+        
         #---------------------------------------------------------#
         
         # Device Control Center
         self.control_layout = QHBoxLayout()
-        self.deviceControl = controlCenter()
+        self.deviceControl = ControlCenter()
         self.control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignTop)
+        # Add a tab widget to hold multiple control centers
+        self.control_tabs = QTabWidget()
+        
+        # Add the initial control center tab
+        self.control_tabs.addTab(self.deviceControl.Container, "1")
+        
+        # Button to add a new control center
+        self.add_tab_button = QPushButton("Add Control Center", self)
+        self.add_tab_button.setToolTip("Add a new control center tab")
+        self.add_tab_button.clicked.connect(self.add_control_center_tab)
+        self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignTop)
+        self.control_layout.addWidget(self.control_tabs)
+
         
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -121,6 +135,8 @@ class App(QWidget):
         self.draw_execute_button()
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
+        
+        # Add Layouts to Main Layout
         self.layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)
         self.layout.addLayout(button_layout)
@@ -130,7 +146,6 @@ class App(QWidget):
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
-        
         self.threadpool.start_connection()
         
         self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
@@ -143,7 +158,12 @@ class App(QWidget):
     # Methods ---------- #
     
     def get_commands(self):
-        return self.deviceControl.get_commands()
+        commands = []
+        for i in range(self.control_tabs.count()):
+            control_center = self.control_tabs.widget(i)
+            if isinstance(control_center, ControlCenter()):
+                commands.extend(control_center.get_commands())
+        return commands
         
     
     def tare(self):
@@ -157,10 +177,17 @@ class App(QWidget):
         rotary_error = QLabel(self.device.errors[0])
         linear_error = QLabel(self.device.errors[1])
         scale_error = QLabel(self.device.errors[2])
+        rotary_error.setObjectName('error')
+        linear_error.setObjectName('error')
+        scale_error.setObjectName('error')
         self.errorLayout.addWidget(rotary_error)
         self.errorLayout.addWidget(linear_error)
         self.errorLayout.addWidget(scale_error)
-        
+    
+    def add_control_center_tab(self):
+        # Create a new control center and add it as a new tab
+        new_control_center = ControlCenter()
+        self.control_tabs.addTab(new_control_center.Container, f"{self.control_tabs.count() + 1}")
     
     # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):
@@ -198,10 +225,12 @@ class App(QWidget):
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
     
+    # Execute Commands ----------- #
     def execute(self):
         command_set = self.get_commands()
         self.threadpool.start_process(command_set)
     
+    # Update UI based on connection status ----------- #
     def connected(self):
         self.draw_errorLayout()
         self.draw_execute_button()

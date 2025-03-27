@@ -40,6 +40,11 @@ QLabel {
     border: #f0f0f0;
 }
 
+QLabel#error {
+    color: #b60000;
+    font-size: 12px;
+}
+
 QLabel#device_info {
     font-size: 12px;
     position: absolute;
