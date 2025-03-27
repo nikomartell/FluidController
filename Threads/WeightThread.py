@@ -5,7 +5,7 @@ import time
 from PyQt6.QtCore import pyqtSignal, QObject, QThread
 
 class WeightThread(QThread):
-    def __init__(self, scale, precision = 1):
+    def __init__(self, scale, precision = 2):
         super().__init__()
         self.scale = scale
         self.signals = WeightSignal()
@@ -17,19 +17,21 @@ class WeightThread(QThread):
         self._is_running = False
 
     def run(self):
-        interval = 10 ** -self.precision
-        print('Weight Thread Running')
-        try:
-            while self._is_running:
-                if self.scale.device:
-                    self.signals.result.emit(self.scale.get_weight())
-                    time.sleep(interval)
-                if not self._is_running:
-                    break
-        except Exception as e:
-            print(f'Error: {e}')
-        finally:
-            self.signals.finished.emit()
+        if isinstance(self.scale, Scale):
+            interval = 10 ** -self.precision
+            print('Weight Thread Running')
+            try:
+                while self._is_running:
+                    if self.scale.device:
+                        self.signals.result.emit(self.scale.get_weight())
+                        time.sleep(interval)
+                    if not self._is_running:
+                        break
+            except Exception as e:
+                print(f'Error: {e}')
+            finally:
+                self.scale.device.purge()  # Clear the input and output buffers
+                self.signals.finished.emit()
     
     # This is the primary way to tare the scale.
     # Using it directly through the scale can freeze the UI

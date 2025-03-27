@@ -2,3 +2,8 @@ data.csv
 examples/
 .vscode/
 .vs/
+output/
+**/__pycache__
+.venv
+notes.md
+Bench2O.spec

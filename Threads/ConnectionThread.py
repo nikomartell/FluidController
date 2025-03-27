@@ -37,7 +37,8 @@ class ConnectionThread(QThread):
             except Exception as e:
                 print(f'Error: {e}')
                 traceback.print_exc()
-
+        
+        self.signals.result.emit(self.con)
         self.signals.finished.emit()
         
     def quit(self):
