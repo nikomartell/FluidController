@@ -4,13 +4,14 @@ from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
 import time
 
-class MotorThread(QObject, QRunnable):
+class MotorThread(QThread):
 
-    def __init__(self, controller = Controller(), command_set = CommandSet()):
+    def __init__(self, controller, command_set = CommandSet(), precision = 2):
         super().__init__()
         self.controller = controller
         self.command_set = command_set
         self.signals = MotorSignal()
+        self.precision = precision
         self._is_running = False
 
     def quit(self):
@@ -18,6 +19,11 @@ class MotorThread(QObject, QRunnable):
 
     def run(self):
         self._is_running = True
+        self.command_set.print()
+        self.signals.start.emit()
+        
+        interval = 10 ** -self.precision
+        
         if self.controller is not None:
             match self.command_set.component:
                 case 'Linear Motor':
@@ -42,21 +48,23 @@ class MotorThread(QObject, QRunnable):
                         if not self._is_running:
                             self.motor.stop()
                             break
-                        time.sleep(0.1)
+                        time.sleep(interval)
                         
                 
                 time.sleep(1)
                 if not self._is_running:
                     break
                 # Base time running off current time
-                start_time = time.time()
-                self.signals.start.emit()
+                self.signals.execute.emit()
                 
+                self.task()
+                timer = 0
                 # While the motor is running, keep rotating the motor at the set flow rate
-                while time.time() - start_time < self.command_set.duration and self._is_running:
-                    self.task()
-                    time.sleep(0.1)
+                while timer < self.command_set.duration and self._is_running:
+                    time.sleep(interval)
+                    timer += interval
                 
+                self.signals.finished.emit()
                 self.motor.stop()
                 
                 # Decrement the number of iterations
@@ -65,8 +73,6 @@ class MotorThread(QObject, QRunnable):
                 # If set to stop running, break out of the loop
                 if not self._is_running:
                     break
-                time.sleep(2)
-            self._is_running = False
                 
         except Exception as e:
             print(f'Error: {e}')
@@ -96,4 +102,5 @@ class MotorSignal(QObject):
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
     toZero = pyqtSignal()
+    execute = pyqtSignal()
     start = pyqtSignal()

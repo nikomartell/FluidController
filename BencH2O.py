@@ -7,6 +7,7 @@ import numpy as np
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import QAction
+from pytrinamic.connections import ConnectionManager
 from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
 from Threads.ConnectionThread import ConnectionThread
@@ -15,7 +16,7 @@ from Threads.GraphThread import GraphThread
 from Threads.WeightThread import WeightThread
 from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
-from Interface.Analysis import AnalysisCenter
+from Interface.AnalysisCenter import AnalysisCenter
 from Interface.ControlCenter import ControlCenter
 import csv
 import os
@@ -25,10 +26,14 @@ class App(QWidget):
         super().__init__()
         
         # Device Connection
-        self.device = Controller()
-        self.weight_thread = WeightThread()
-        self.threadpool = ThreadPool()
-        self.threadpool.connection_thread.signals.result.connect(lambda con: set_device(con))
+        try:
+            interface = ConnectionManager().connect()
+        except Exception as e:
+            interface = None
+            print(f'Error: {e}')
+
+        self.device = Controller(interface)
+        self.threadpool = ThreadPool(self.device)
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
@@ -36,12 +41,9 @@ class App(QWidget):
         # Graph Setup
         self.fig, self.ax = plt.subplots()
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
+        self.graph.set_data(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
         self.initUI()
-        
-        def set_device(con):
-            self.device = con
-            self.weight_thread.scale = con.scale
             
     
     def initUI(self):
@@ -117,7 +119,7 @@ class App(QWidget):
 
         # These are the threads for each of the components.
         # Communication with components should be done through threads to prevent UI freezing.
-        self.threadpool.signals.data.connect(lambda data: self.update_graph(data))
+        
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
@@ -145,11 +147,18 @@ class App(QWidget):
 
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
+        self.threadpool.motor_thread.started.connect(self.draw_execute_button)
+        self.threadpool.motor_thread.started.connect(self.reset_graph)
+        self.threadpool.motor_thread.finished.connect(self.draw_execute_button)
+        
+        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
+        
+        self.threadpool.signals.log.connect(lambda t, w: self.update_graph(t, w))
+        
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         self.threadpool.start_connection()
         
-        self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
-        self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
+        
         # Testing Area. Commment out contents before use #
         # self.graph_thread.start()
     
@@ -167,7 +176,7 @@ class App(QWidget):
         
     
     def tare(self):
-        self.weight_thread.tare()
+        self.threadpool.weight_thread.tare()
     
     # Update Layouts ----------- #
     
@@ -235,11 +244,22 @@ class App(QWidget):
         self.draw_errorLayout()
         self.draw_execute_button()
         self.draw_analysis()
-        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
     
     # Update Graph ----------- #
-    def update_graph(self, data):
-        self.data = data
+    def update_graph(self, time, weight):
+        # Add data to the dataframe
+        self.data = pd.concat([self.data, pd.DataFrame({'Time': [time], 'Weight': [weight]})])
+        
+        # Update the graph
+        x = self.data['Time']
+        y = self.data['Weight']
+        self.graph.set_data(x, y)
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.fig.canvas.draw_idle()
+        
+    def reset_graph(self):
+        self.data = pd.DataFrame(columns=['Time', 'Weight'])
         x = self.data['Time']
         y = self.data['Weight']
         self.graph.set_data(x, y)
@@ -292,8 +312,6 @@ class App(QWidget):
 if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
-        ex.threadpool.weight_thread.quit()
-        ex.threadpool.connection_thread.quit()
         ex.failsafe_data_csv()
     
     app = QApplication(sys.argv)

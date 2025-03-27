@@ -9,65 +9,56 @@ from Controller.Controller import Controller
 import time
 
 class ThreadPool(QThreadPool):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
         self.setMaxThreadCount(10)
-        self.threads = []
         self.signals = ThreadPoolSignal()
+        self.controller = controller
+        
         
         # Initialize Threads
-        self.motor_thread = MotorThread()
-        self.graph_thread = GraphThread()
-        self.connection_thread = ConnectionThread()
-        self.weight_thread = WeightThread()
+        self.motor_thread = MotorThread(self.controller)
+        self.graph_thread = GraphThread(self.controller.scale)
+        self.weight_thread = WeightThread(self.controller.scale)
+        self.connection_thread = ConnectionThread(self.controller)
         
         
     # Take a Runnable object, move it to a thread, store it in Threads list if not already started
     def start(self, runnable):
-        # Check if the runnable is already associated with an existing thread
-        for thread in self.threads:
-            if thread.isRunning() and thread in runnable.thread().children():
-                thread.start()
-                return
-        
-        # If not, create a new thread and start it
-        thread = QtCore.QThread()
-        if isinstance(runnable, QObject):
-            runnable.moveToThread(thread)
-        else: 
-            raise TypeError("Runnable must inherit from QObject to use moveToThread.")
-        thread.started.connect(runnable.run)
-        thread.start()
-        self.threads.append(thread)
+        runnable.run()
 
     # Stop all threads
     def stop(self):
-        for thread in self.threads:
-            thread.quit()
-            thread.wait()
-        self.threads.clear()
+        self.motor_thread.quit()
+        self.graph_thread.quit()
+        self.weight_thread.quit()
+        self.connection_thread.quit()
     
     # Start the connection thread
     def start_connection(self):
         # Set signal connections
+        self.connection_thread = ConnectionThread(self.controller)
         self.connection_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
-        self.connection_thread.signals.result.connect(lambda con: self.found_controller(con))
+        self.connection_thread.signals.result.connect(lambda con: self.set_controller(con))
         self.connection_thread.start()
     
     # Start the motor thread
     def start_process(self, command_set):
+        
         # Set the controller and command set for the motor thread
         self.motor_thread.command_set = command_set
         
-        # Set the scale for the graph thread and emitting it's data
-        self.graph_thread.signals.result.connect(lambda data: self.signals.log.emit(data))
+        # Set graph thread signal connections
+        self.graph_thread = GraphThread(self.controller.scale)
+        self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
         
-        # Set signal connections
-        self.motor_thread.signals.start.connect(lambda: self.start(self.graph_thread))
+        # Set motor thread signal connections
+        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
         self.motor_thread.signals.finished.connect(self.signals.finished.emit)
+        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.quit())
         self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         
-        self.start(self.motor_thread)
+        self.motor_thread.start()
         
     
     # Set the precision of the threads
@@ -76,20 +67,19 @@ class ThreadPool(QThreadPool):
         self.graph_thread.precision = precision
     
     # When connection is established, set the controller for the motor thread and the scale for the weight thread
-    def found_controller(self, controller):
-        self.weight_thread = WeightThread()
+    def set_controller(self, controller):
+        self.weight_thread = WeightThread(self.controller.scale)
         self.controller = controller
         self.motor_thread.controller = self.controller
         self.weight_thread.scale = self.controller.scale
-        if self.controller.scale.device:
-            self.weight_thread.signals.result.connect(lambda weight: self.signals.data.emit(weight))
-            self.weight_thread.start()
+        self.weight_thread.signals.result.connect(lambda weight: self.signals.data.emit(weight))
+        self.weight_thread.start()
 
 
 class ThreadPoolSignal(QObject):
     started = pyqtSignal()
     finished = pyqtSignal()
-    log = pyqtSignal(object)
+    log = pyqtSignal(object, object)
     data = pyqtSignal(object)
 
     

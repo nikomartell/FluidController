@@ -1,34 +1,31 @@
 import sys
-from PyQt6.QtCore import QRunnable, pyqtSignal, QObject
+from PyQt6.QtCore import QRunnable, pyqtSignal, QObject, QThread
 from Controller.Scale import Scale
 import time
 import traceback
 import pandas as pd
 
-class GraphThread(QObject, QRunnable):
+class GraphThread(QThread):
     
-    def __init__(self, scale = Scale(), precision = 2):
+    def __init__(self, scale, precision = 2):
         super().__init__()
         self.signals = GraphSignal()
         self._is_running = True
-        self.data = pd.DataFrame(columns=['Time', 'Weight'])
         self.scale = scale
         self.precision = precision
     
     # X is time, Y is weight
     def run(self):
-        data = pd.DataFrame(columns=['Time', 'Weight'])
         try:
             # This specifies the interval of time between each data point
             interval = 10 ** -self.precision
-            self.x = 0
+            t = 0
             
             # While the thread is running, keep updating the graph with new data
             while self._is_running:
-                self.x += interval
-                self.x = round(self.x, self.precision)
-                data.loc[self.x] = [self.x, self.scale.weight]
-                self.signals.result.emit(data)
+                t += interval
+                t = round(t, self.precision)
+                self.signals.result.emit(t, self.scale.weight)
                 time.sleep(interval)
                 
         except:
@@ -44,4 +41,4 @@ class GraphThread(QObject, QRunnable):
 class GraphSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
+    result = pyqtSignal(object, object)

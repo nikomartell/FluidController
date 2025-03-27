@@ -9,5 +9,14 @@ class CommandSet:
         self.flowDirection = flowDirection
         self.duration = int(duration) if duration is not '' else 3
         self.iterations = int(iterations) if iterations is not '' else 1
+        
+    def print(self):
+        print(f'Component: {self.component}')
+        print(f'Flow Rate: {self.flowRate}')
+        print(f'Strokes: {self.strokes}')
+        print(f'Acceleration: {self.acceleration}')
+        print(f'Flow Direction: {self.flowDirection}')
+        print(f'Duration: {self.duration}')
+        print(f'Iterations: {self.iterations}')
 
     
