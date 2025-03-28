@@ -53,15 +53,15 @@ class ControlCenter(QWidget):
         top_layout.addLayout(componentLayout)
         
         # Flow Rate
-        flowRateLabel = QLabel('Flow Rate (Ml/sec):', self.Container)
-        self.flowRate = QLineEdit()
-        self.flowRate.setPlaceholderText('Default: 1.0')
-        self.flowRate.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        speedLabel = QLabel('Speed (RPM):', self.Container)
+        self.speed = QLineEdit()
+        self.speed.setPlaceholderText('Default: 1.0')
+        self.speed.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
         
-        flowRateLayout = QVBoxLayout()
-        flowRateLayout.addWidget(flowRateLabel, alignment=Qt.AlignmentFlag.AlignTop)
-        flowRateLayout.addWidget(self.flowRate, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.addLayout(flowRateLayout)
+        speedLayout = QVBoxLayout()
+        speedLayout.addWidget(speedLabel, alignment=Qt.AlignmentFlag.AlignTop)
+        speedLayout.addWidget(self.speed, alignment=Qt.AlignmentFlag.AlignTop)
+        motion_layout.addLayout(speedLayout)
         
         # Strokes
         strokesLabel = QLabel('Strokes(Rotations):', self.Container)
@@ -132,21 +132,21 @@ class ControlCenter(QWidget):
     def get_commands(self):
         # Functions used for each variable translates input to commands
         componentCom = self.component.currentText()
-        flowRateCom = self.flowRate.text()
+        speedCom = self.speed.text()
         strokesCom = self.strokes.text()
         accelerationCom = self.acceleration.text()
         flowDirectionCom = self.flowDirection.currentText()
         durationCom = self.duration.text()
         iterationsCom = self.iterations.text()
         
-        commands = CommandSet(componentCom, flowRateCom, strokesCom, accelerationCom, 
+        commands = CommandSet(componentCom, speedCom, strokesCom, accelerationCom, 
                               flowDirectionCom, durationCom, iterationsCom)
             
         return commands
         
     def set_commands(self, commandSet):
         self.component.setCurrentText(commandSet.component)
-        self.flowRate.setText(commandSet.flowRate)
+        self.speed.setText(commandSet.speed)
         self.strokes.setText(commandSet.strokes)
         self.acceleration.setText(commandSet.acceleration)
         self.flowDirection.setCurrentText(commandSet.flowDirection)

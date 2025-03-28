@@ -9,8 +9,8 @@ class Controller(QObject):
         
         self.name = 'Pump Controller' 
         self.module = TMCM3110(interface) if interface else None
-        self.linear = self.module.motors[0] if interface else None
-        self.rotary = self.module.motors[1] if interface else None
+        self.rotary = self.module.motors[0] if interface else None
+        self.linear = self.module.motors[1] if interface else None
         if interface:
             self.linear.stop()
             self.rotary.stop()

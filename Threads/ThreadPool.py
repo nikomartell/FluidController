@@ -68,12 +68,13 @@ class ThreadPool(QThreadPool):
     
     # When connection is established, set the controller for the motor thread and the scale for the weight thread
     def set_controller(self, controller):
-        self.weight_thread = WeightThread(self.controller.scale)
         self.controller = controller
         self.motor_thread.controller = self.controller
-        self.weight_thread.scale = self.controller.scale
-        self.weight_thread.signals.result.connect(lambda weight: self.signals.data.emit(weight))
-        self.weight_thread.start()
+        
+        if self.controller.scale.device is not None:
+            self.weight_thread = WeightThread(self.controller.scale)
+            self.weight_thread.signals.result.connect(lambda weight: self.signals.data.emit(weight))
+            self.weight_thread.start()
 
 
 class ThreadPoolSignal(QObject):

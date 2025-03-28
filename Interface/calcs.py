@@ -1,4 +1,4 @@
 
-def calcFlowRate(flowRate):
-    return flowRate
+def calcspeed(speed):
+    return speed
     

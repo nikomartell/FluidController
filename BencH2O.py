@@ -116,6 +116,14 @@ class App(QWidget):
         self.analysisCenter.tareScale.clicked.connect(self.tare)
         
         
+        self.statusText = QLabel('Standby')
+        self.statusText.setObjectName('title')
+        button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignRight)
+        self.threadpool.signals.finished.connect(lambda: self.statusText.setText('Standby'))
+        self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
+        self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
+        
+        
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')

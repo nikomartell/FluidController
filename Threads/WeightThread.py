@@ -5,7 +5,7 @@ import time
 from PyQt6.QtCore import pyqtSignal, QObject, QThread
 
 class WeightThread(QThread):
-    def __init__(self, scale, precision = 2):
+    def __init__(self, scale, precision = 3):
         super().__init__()
         self.scale = scale
         self.signals = WeightSignal()
@@ -30,7 +30,9 @@ class WeightThread(QThread):
             except Exception as e:
                 print(f'Error: {e}')
             finally:
-                self.scale.device.purge()  # Clear the input and output buffers
+                if self.scale.device:
+                    self.scale.device.purge()  # Clear the input and output buffers
+                    self.scale.device.close()  # Close the device
                 self.signals.finished.emit()
     
     # This is the primary way to tare the scale.

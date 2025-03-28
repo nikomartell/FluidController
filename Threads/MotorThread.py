@@ -6,12 +6,11 @@ import time
 
 class MotorThread(QThread):
 
-    def __init__(self, controller, command_set = CommandSet(), precision = 2):
+    def __init__(self, controller, command_set = CommandSet()):
         super().__init__()
         self.controller = controller
         self.command_set = command_set
         self.signals = MotorSignal()
-        self.precision = precision
         self._is_running = False
 
     def quit(self):
@@ -22,7 +21,7 @@ class MotorThread(QThread):
         self.command_set.print()
         self.signals.start.emit()
         
-        interval = 10 ** -self.precision
+        interval = 0.0001
         
         if self.controller is not None:
             match self.command_set.component:
@@ -92,9 +91,9 @@ class MotorThread(QThread):
     def task(self):
             # Rotate the motor at the set flow rate for the specified duration.
             if self.command_set.flowDirection == 'Dispense':
-                self.motor.rotate(self.command_set.flowRate)
+                self.motor.rotate(self.command_set.speed)
             elif self.command_set.flowDirection == 'Aspirate':
-                self.motor.rotate(-self.command_set.flowRate)
+                self.motor.rotate(-self.command_set.speed)
         
 
 class MotorSignal(QObject):
