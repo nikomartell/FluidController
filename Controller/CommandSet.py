@@ -1,5 +1,3 @@
-import Interface.calcs as calcs
-
 class CommandSet:
     def __init__(self, component="Rotary Motor", speed=500, strokes=10, acceleration=10, flowDirection="Dispense", duration=3, iterations=1):
         self.component = component
