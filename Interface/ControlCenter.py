@@ -44,7 +44,7 @@ class ControlCenter(QWidget):
         componentLabel = QLabel('Component:', self.Container)
         self.component = QComboBox()
         self.component.setObjectName('self.component')
-        self.component.addItems(['Linear Motor', 'Rotary Motor'])
+        self.component.addItems(['Rotary Motor', 'Linear Motor'])
         
         componentLayout = QVBoxLayout()
         componentLayout.setAlignment(Qt.AlignmentFlag.AlignBottom)
