@@ -56,6 +56,12 @@ def apply_style(parent):
             font-size: 40px;
             font-weight: bold;
         }
+        
+        QLabel#error {
+            font-size: 12px;
+            color: red;
+            font-weight: bold;
+        }
 
         QLineEdit {
             border: 1px solid #333333;
