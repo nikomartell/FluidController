@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtCore import QRunnable, pyqtSignal, QObject, QThread
+from PyQt6.QtCore import QRunnable, pyqtSignal, QObject, QThread, QMutex, QWaitCondition
 from Controller.Scale import Scale
 import time
 import traceback
@@ -10,6 +10,9 @@ class GraphThread(QThread):
     def __init__(self, scale, precision = 3):
         super().__init__()
         self.signals = GraphSignal()
+        self._paused = False
+        self._pause_mutex = QMutex()
+        self._pause_condition = QWaitCondition()
         self._is_running = True
         self.scale = scale
         self.precision = precision
@@ -23,10 +26,17 @@ class GraphThread(QThread):
             
             # While the thread is running, keep updating the graph with new data
             while self._is_running:
-                t += interval
-                t = round(t, self.precision)
-                self.signals.result.emit(t, self.scale.weight)
-                time.sleep(interval)
+                
+                if self._paused:
+                    self._pause_mutex.lock()
+                    self._pause_condition.wait(self._pause_mutex)
+                    self._pause_mutex.unlock()
+                    
+                else:
+                    t += interval
+                    t = round(t, self.precision)
+                    self.signals.result.emit(t, self.scale.weight)
+                    time.sleep(interval)
                 
         except:
             traceback.print_exc()
@@ -37,6 +47,17 @@ class GraphThread(QThread):
         
     def quit(self):
         self._is_running = False
+        
+    def pause(self):
+        self._pause_mutex.lock()
+        self._paused = True
+        self._pause_mutex.unlock()
+    
+    def resume(self):
+        self._pause_mutex.lock()
+        self._paused = False
+        self._pause_condition.wakeAll()
+        self._pause_mutex.unlock()
         
 class GraphSignal(QObject):
     finished = pyqtSignal()

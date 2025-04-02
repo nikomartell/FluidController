@@ -44,22 +44,29 @@ class ThreadPool(QThreadPool):
     
     # Start the motor thread
     def start_process(self, command_set):
+        commands = command_set
         
-        # Set the controller and command set for the motor thread
-        self.motor_thread.command_set = command_set
+        # Start the graph thread but pause it until a command is given
+        self.graph_thread.pause()
+        self.graph_thread.start()
         
-        # Set graph thread signal connections
-        self.graph_thread = GraphThread(self.controller.scale)
-        self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
+        for command in commands:
+            self.motor_thread.command_set = command
+            
+            # Set graph thread signal connections
+            self.graph_thread = GraphThread(self.controller.scale)
+            self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
+            
+            # Set motor thread signal connections
+            self.motor_thread.signals.execute.connect(lambda: self.graph_thread.resume())
+            self.motor_thread.signals.finished.connect(lambda: self.graph_thread.pause())
+            self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
+            
+            self.motor_thread.start()
+            self.motor_thread.wait()
         
-        # Set motor thread signal connections
-        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
-        self.motor_thread.signals.finished.connect(self.signals.finished.emit)
-        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.quit())
-        self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
-        
-        self.motor_thread.start()
-        
+        self.signals.finished.emit()
+        self.graph_thread.quit()
     
     # Set the precision of the threads
     def set_precision(self, precision):
