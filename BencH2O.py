@@ -113,13 +113,8 @@ class App(QWidget):
         self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignTop)
         self.control_layout.addWidget(self.control_tabs)
 
-        
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
-
-        # These are the threads for each of the components.
-        # Communication with components should be done through threads to prevent UI freezing.
-        
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()

@@ -84,6 +84,18 @@ def apply_style(parent):
             padding: 5px;
             max-width: 200px;
         }
+        
+        QTabWidget::tab:selected {
+            background-color: #545860;
+            padding: 10px;
+            border: 2px solid #0B41CD;
+            border-radius: 5px;
+        }
+        
+        QTabWidget::tab:selected {
+            background-color: #0B41CD;
+            color: #ffffff;
+        }
 
         QComboBox QAbstractItemView {
             background-color: #ffffff;
