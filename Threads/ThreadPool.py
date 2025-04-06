@@ -2,7 +2,7 @@ from PyQt6 import QtCore
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread, QThreadPool
 from Threads.GraphThread import GraphThread
-from Threads.MotorThread import MotorThread
+from Threads.RotaryThread import RotaryThread
 from Threads.ConnectionThread import ConnectionThread
 from Threads.WeightThread import WeightThread
 from Controller.Controller import Controller
@@ -17,7 +17,7 @@ class ThreadPool(QThreadPool):
         
         
         # Initialize Threads
-        self.motor_thread = MotorThread(self.controller)
+        self.motor_thread = RotaryThread(self.controller)
         self.graph_thread = GraphThread(self.controller.scale)
         self.weight_thread = WeightThread(self.controller.scale)
         self.connection_thread = ConnectionThread(self.controller)
@@ -44,17 +44,17 @@ class ThreadPool(QThreadPool):
     
     # Start the motor thread
     def start_process(self, command_set):
-        commands = command_set
         
         # Start the graph thread but pause it until a command is given
         self.graph_thread.pause()
         self.graph_thread.start()
         
-        for command in commands:
-            self.motor_thread.command_set = command
+        for commands in command_set:
+            print("Staged commands: ", commands)
+            
+            self.motor_thread.command_set = commands
             
             # Set graph thread signal connections
-            self.graph_thread = GraphThread(self.controller.scale)
             self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
             
             # Set motor thread signal connections

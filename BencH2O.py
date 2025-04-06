@@ -11,7 +11,7 @@ from pytrinamic.connections import ConnectionManager
 from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
 from Threads.ConnectionThread import ConnectionThread
-from Threads.MotorThread import MotorThread
+from Threads.RotaryThread import RotaryThread
 from Threads.GraphThread import GraphThread
 from Threads.WeightThread import WeightThread
 from Threads.ThreadPool import ThreadPool
@@ -112,6 +112,7 @@ class App(QWidget):
         self.add_tab_button.clicked.connect(self.add_control_center_tab)
         self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignTop)
         self.control_layout.addWidget(self.control_tabs)
+        self.control_sets = []
 
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -136,7 +137,7 @@ class App(QWidget):
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
-        self.execute_button.clicked.connect(lambda: self.execute)
+        self.execute_button.clicked.connect(self.execute)
         self.draw_execute_button()
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
@@ -171,12 +172,13 @@ class App(QWidget):
     
     def get_commands(self):
         commands = []
-        for i in range(self.control_tabs.count()):
-            control_center = self.control_tabs.widget(i)
-            if isinstance(control_center, ControlCenter()):
-                commands.extend(control_center.get_commands())
+        for control_center in self.control_sets:
+            # Get the command set from each control center
+            command_set = control_center.get_commands()
+            commands.append(command_set)
+        print('Commands:', commands)
         return commands
-        
+     
     
     def tare(self):
         self.threadpool.weight_thread.tare()
@@ -196,10 +198,11 @@ class App(QWidget):
         self.errorLayout.addWidget(linear_error)
         self.errorLayout.addWidget(scale_error)
     
-    def add_control_center_tab(self):
+    def add_control_center_tab(self, commands=None):
         # Create a new control center and add it as a new tab
         new_control_center = ControlCenter()
         self.control_tabs.addTab(new_control_center.Container, f"{self.control_tabs.count() + 1}")
+        self.control_sets.append(new_control_center)
     
     # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):
@@ -239,6 +242,7 @@ class App(QWidget):
     
     # Execute Commands ----------- #
     def execute(self):
+        print('Executing commands...')
         command_set = self.get_commands()
         self.threadpool.start_process(command_set)
     
@@ -278,11 +282,12 @@ class App(QWidget):
     def store_commands_to_csv(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
-            commands = self.deviceControl.get_commands()
             with open(file_name, 'w', newline='') as csvfile:
-                command_writer = csv.writer(csvfile)
-                for command in commands:
-                    command_writer.writerow([command])
+                writer = csv.writer(csvfile)
+                writer.writerow(['Component', 'Speed', 'Strokes', 'Acceleration', 'Flow Direction', 'Duration', 'Iterations'])
+                control_sets = self.get_commands()
+                for commands in control_sets:
+                    writer.writerow(commands.array())
             QMessageBox.information(self, 'Success', f'Commands saved to {file_name}')
 
     # Import commands from CSV
@@ -291,7 +296,7 @@ class App(QWidget):
         if file_name:
             with open(file_name, 'r') as csvfile:
                 command_reader = csv.reader(csvfile)
-                commands = [row[0] for row in command_reader if row]
+                commands = [row[1] for row in command_reader if row]
                 self.deviceControl.set_commands(commands)
             QMessageBox.information(self, 'Success', f'Commands imported from {file_name}')
            

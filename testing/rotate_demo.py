@@ -19,12 +19,10 @@ with connection_manager.connect() as my_interface:
     motor_0 = module.motors[0]
     motor_1 = module.motors[1]
     motor_2 = module.motors[2]
-
-    # Please be sure not to use a too high current setting for your motor.
-
-    print("Preparing parameters")
-
-    motor_1.move_by()
-    time.sleep(1)
-    motor_1.stop()
     
+    print(motor_0.drive_settings)
+    
+    print("Motor 0:" , motor_0.get_actual_position())
+    
+    time.sleep(1)
+   

@@ -16,5 +16,8 @@ class CommandSet:
         print(f'Flow Direction: {self.flowDirection}')
         print(f'Duration: {self.duration}')
         print(f'Iterations: {self.iterations}')
+    
+    def array(self):
+        return [self.component, self.speed, self.strokes, self.acceleration, self.flowDirection, self.duration, self.iterations]
 
     

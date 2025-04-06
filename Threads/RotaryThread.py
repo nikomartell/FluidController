@@ -5,7 +5,7 @@ from Controller.CommandSet import CommandSet
 from pytrinamic.modules import TMCM3110
 import time
 
-class MotorThread(QThread):
+class RotaryThread(QThread):
 
     def __init__(self, controller, command_set = CommandSet()):
         super().__init__()
