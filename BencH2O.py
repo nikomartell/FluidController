@@ -18,6 +18,7 @@ from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
 from Interface.AnalysisCenter import AnalysisCenter
 from Interface.ControlCenter import ControlCenter
+from Interface.CalibrationMenu import CalibrationMenu
 import csv
 import os
 
@@ -85,8 +86,9 @@ class App(QWidget):
         
         #Tools Menu
         tools_menu = menubar.addMenu('Tools')
-        tools_action = QAction('Change Analysis', self)
-        tools_menu.addAction(tools_action)
+        calibrate_action = QAction('Calibrate Rotary Motor', self)
+        calibrate_action.triggered.connect(self.open_rotary_calibration)
+        tools_menu.addAction(calibrate_action)
         
         #Help Menu
         help_menu = menubar.addMenu('Help')
@@ -239,6 +241,15 @@ class App(QWidget):
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
+    
+    # Open Rotary Motor Calibration Window ----------- #
+    def open_rotary_calibration(self):
+        if self.device.errors[0] is not None:
+            QMessageBox.critical(self, "Error", "Rotary motor not found!")
+            return
+
+        self.rotary_calibration = CalibrationMenu(self)
+        self.rotary_calibration.show()
     
     # Execute Commands ----------- #
     def execute(self):

@@ -48,12 +48,9 @@ class RotaryThread(QThread):
                 
                 # If the motor is not at the default position, move it to the default position
                 self.signals.toZero.emit()
+                self.motor.move_to(0, velocity=100)
                 while self.motor.actual_position != 0:
-                    if self.motor.actual_position > 0:
-                        self.motor.move_to(0, velocity=-100)
-                    elif self.motor.actual_position < 0:
-                        self.motor.move_to(0, velocity=100)
-                        
+                    
                     # If the thread is not running, stop the motor and break out of the loop
                     if not self._is_running:
                         self.motor.stop()
@@ -63,7 +60,7 @@ class RotaryThread(QThread):
                     
                 # -----------------------Zeroing Finished-------------------------- #    
                 
-                time.sleep(1)
+                time.sleep(2)
                 
                 if not self._is_running:
                     break
@@ -73,8 +70,11 @@ class RotaryThread(QThread):
                 self.signals.execute.emit()
                 self.task()
                 timer = 0
+                duration = self.command_set.duration
+                total_steps = self.command_set.strokes * self.controller.rotary_home
                 # While the motor is running, keep rotating the motor at the set Flow Rate
-                while timer < self.command_set.duration & self._is_running:
+                while (timer < duration) & self._is_running & (self.motor.actual_position != total_steps):
+                    print('Current Position:', self.motor.actual_position)
                     time.sleep(interval)
                     timer += interval
                 
@@ -110,6 +110,9 @@ class RotaryThread(QThread):
             # Rotate the motor at the set Flow Rate for the specified duration.
             self.motor.max_acceleration = self.command_set.acceleration
             self.motor.max_velocity = self.command_set.speed
+            if self.command_set.strokes > 0:
+                total_steps = self.command_set.strokes * self.controller.rotary_home
+                self.motor.move_to(total_steps, velocity=self.command_set.speed)
             if self.command_set.flowDirection == 'Dispense':
                 self.motor.rotate(self.command_set.speed)
             elif self.command_set.flowDirection == 'Aspirate':
