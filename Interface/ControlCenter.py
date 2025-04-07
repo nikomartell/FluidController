@@ -87,12 +87,12 @@ class ControlCenter(QWidget):
         
         # Flow Direction
         flowDirectionLabel = QLabel('Flow Direction:', self.Container)
-        self.flowDirection = QComboBox()
-        self.flowDirection.addItems(['Dispense', 'Aspirate'])
+        self.flow_direction = QComboBox()
+        self.flow_direction.addItems(['Dispense', 'Aspirate'])
 
         flowDirectionLayout = QVBoxLayout()
         flowDirectionLayout.addWidget(flowDirectionLabel, alignment=Qt.AlignmentFlag.AlignTop)
-        flowDirectionLayout.addWidget(self.flowDirection, alignment=Qt.AlignmentFlag.AlignTop)
+        flowDirectionLayout.addWidget(self.flow_direction, alignment=Qt.AlignmentFlag.AlignTop)
         motion_layout.addLayout(flowDirectionLayout)
         
         #----------End Case Settings----------#
@@ -131,26 +131,27 @@ class ControlCenter(QWidget):
         # Send Commands from text boxes to device
     def get_commands(self):
         # Functions used for each variable translates input to commands
-        componentCom = self.component.currentText()
-        speedCom = self.speed.text()
-        strokesCom = self.strokes.text()
-        accelerationCom = self.acceleration.text()
-        flowDirectionCom = self.flowDirection.currentText()
-        durationCom = self.duration.text()
-        iterationsCom = self.iterations.text()
+        component = self.component.currentText()
+        speed = self.speed.text()
+        strokes = self.strokes.text()
+        acceleration = self.acceleration.text()
+        flow_direction = self.flow_direction.currentText()
+        duration = self.duration.text()
+        iterations = self.iterations.text()
         
-        commands = CommandSet(componentCom, speedCom, strokesCom, accelerationCom, 
-                              flowDirectionCom, durationCom, iterationsCom)
+        commands = CommandSet(component, speed, strokes, acceleration, 
+                              flow_direction, duration, iterations)
             
         return commands
         
-    def set_commands(self, commandSet):
-        self.component.setCurrentText(commandSet.component)
-        self.speed.setText(commandSet.speed)
-        self.strokes.setText(commandSet.strokes)
-        self.acceleration.setText(commandSet.acceleration)
-        self.flowDirection.setCurrentText(commandSet.flowDirection)
-        self.duration.setText(commandSet.duration)
-        self.iterations.setText(commandSet.iterations)
+    def set_commands(self, command):
+        if isinstance(command, CommandSet):
+            self.component.setCurrentText(command.component)
+            self.speed.setText(command.speed)
+            self.strokes.setText(command.strokes)
+            self.acceleration.setText(command.acceleration)
+            self.flow_direction.setCurrentText(command.flow_direction)
+            self.duration.setText(command.duration)
+            self.iterations.setText(command.iterations)
         
         

@@ -4,16 +4,12 @@ import matplotlib
 import pandas as pd
 matplotlib.use('QtAgg')
 import numpy as np
-from PyQt6.QtWidgets import *
-from PyQt6.QtCore import *
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTabWidget, QFileDialog, QMessageBox, QMenuBar
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from pytrinamic.connections import ConnectionManager
 from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
-from Threads.ConnectionThread import ConnectionThread
-from Threads.RotaryThread import RotaryThread
-from Threads.GraphThread import GraphThread
-from Threads.WeightThread import WeightThread
 from Threads.ThreadPool import ThreadPool
 from Interface.Style import apply_style
 from Interface.AnalysisCenter import AnalysisCenter
@@ -112,7 +108,7 @@ class App(QWidget):
         self.add_tab_button = QPushButton("Add Control Center", self)
         self.add_tab_button.setToolTip("Add a new control center tab")
         self.add_tab_button.clicked.connect(self.add_control_center_tab)
-        self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignTop)
+        self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.control_layout.addWidget(self.control_tabs)
         self.control_sets = []
 
@@ -206,6 +202,8 @@ class App(QWidget):
         new_control_center = ControlCenter()
         self.control_tabs.addTab(new_control_center.Container, f"{self.control_tabs.count() + 1}")
         self.control_sets.append(new_control_center)
+        if commands is not None:
+            new_control_center.set_commands(commands)
     
     # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):
@@ -292,7 +290,7 @@ class App(QWidget):
     
     # Export commands to CSV
     def store_commands_to_csv(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "", "CSV Files (*.csv);;All Files (*)")
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "datasheet", "CSV Files (*.csv);;All Files (*)")
         if file_name:
             with open(file_name, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)

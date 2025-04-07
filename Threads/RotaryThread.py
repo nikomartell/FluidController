@@ -128,9 +128,9 @@ class RotaryThread(QThread):
             self.motor.max_velocity = command.speed
             if command.strokes > 0:
                 total_steps = command.strokes * self.controller.rotary_home
-                if command.flowDirection == 'Dispense':
+                if command.flow_direction == 'Dispense':
                     self.motor.move_to(total_steps, velocity=command.speed)
-                elif command.flowDirection == 'Aspirate':
+                elif command.flow_direction == 'Aspirate':
                     self.motor.move_to(-total_steps, velocity=command.speed)
             else:
                 self.motor.rotate(command.speed)
