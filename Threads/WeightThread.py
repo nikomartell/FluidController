@@ -18,13 +18,13 @@ class WeightThread(QThread):
 
     def run(self):
         if isinstance(self.scale, Scale):
-            interval = 10 ** -self.precision
             print('Weight Thread Running')
             try:
                 while self._is_running:
                     if self.scale.device:
-                        self.signals.result.emit(self.scale.get_weight())
-                        time.sleep(interval)
+                        queue = self.scale.device.getQueueStatus()
+                        if queue >= 16:
+                            self.signals.result.emit(self.scale.get_weight())
                     if not self._is_running:
                         break
             except Exception as e:

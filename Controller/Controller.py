@@ -11,7 +11,7 @@ class Controller(QObject):
         self.module = TMCM3110(interface) if interface else None
         self.rotary = self.module.motors[0] if interface else None
         self.linear = self.module.motors[1] if interface else None
-        self.rotary_home = None
+        self.rotary_home = 1600
         if interface:
             self.linear.stop()
             self.rotary.stop()

@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QLab
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QDoubleValidator, QIntValidator
 from Controller.Controller import Controller
+import time
 
 class CalibrationMenu(QMainWindow):
     def __init__(self, parent=None):
@@ -32,7 +33,7 @@ class CalibrationMenu(QMainWindow):
             self.current_position_label.setObjectName("label")
             self.layout.addWidget(self.current_position_label)
             
-            self.position_label = QLabel(self.rotary.actual_position, self)
+            self.position_label = QLabel(str(self.rotary.actual_position), self)
             self.position_label.setObjectName("label")
             self.layout.addWidget(self.position_label)
             
@@ -64,59 +65,62 @@ class CalibrationMenu(QMainWindow):
                 self.start_moving_left()
                 
         elif event.key() == Qt.Key.Key_Space:
-            self.set_home
+            self.set_home()
             
-        self.position_label.setText(str(self.rotary.acutal_position))
 
     def key_release_event(self, event):
         if event.key() == Qt.Key.Key_Right:
             self.right_key_pressed = False
+            self.rotary.stop()
         elif event.key() == Qt.Key.Key_Left:
             self.left_key_pressed = False
+            self.rotary.stop()
         
-        self.rotary.stop()
+        
 
 
     def start_moving_right(self):
         if self.right_key_pressed:
             self.move_right()
-            QTimer.singleShot(10, self.start_moving_right)  # Repeat every 10ms
+            QTimer.singleShot(10, self.start_moving_right)
+            self.position_label.setText(str(self.rotary.actual_position))
     
     def start_moving_left(self):
         if self.left_key_pressed:
             self.move_left()
             QTimer.singleShot(10, self.start_moving_left)
+            self.position_label.setText(str(self.rotary.actual_position))
     
     
     def move_right(self):
         # rotate the motor clockwise
         try:
-            self.rotary.rotate(-5)
+            self.rotary.rotate(-10)
         except Exception as e:
             print(f'Error: {e}')
     
     def move_left(self):
         # rotate the motor counter-clockwise
         try:
-            self.rotary.rotate(5)
+            self.rotary.rotate(10)
         except Exception as e:
             print(f'Error: {e}')
             
     def set_home(self):
         try:
-            if self.searching:
+            if self.searching == False:
                 # Set the home position to 0 and user to complete one full rotation
                 self.searching = True
-                self.rotary.acutal_position = 0
-            elif self.searching == False:
+                self.rotary.set_actual_position(0)
+            elif self.searching == True:
                 # Set the upper limit position that completes the rotation
                 self.searching = False
-                excess = self.rotary.acutal_position % self.rotary.drive_settings.get_microstep_resolution()
-                self.limit = self.rotary.acutal_position - excess
+                excess = self.rotary.actual_position % self.rotary.drive_settings.get_microstep_resolution()
+                self.limit = abs(self.rotary.actual_position) - excess
                 
                 # Move to the limit position to ensure no excess microsteps in position
                 self.rotary.move_to(self.limit)
-                self.rotary.acutal_position = 0
+                self.rotary.set_actual_position(0)
                 
                 self.controller.set_rotary_home(self.limit)
                 QMessageBox.information(self, "Set Home", "Home position set successfully!")

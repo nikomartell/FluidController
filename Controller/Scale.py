@@ -28,10 +28,10 @@ class Scale:
     # Function called by Analysis Center to read weight
     def get_weight(self):
         try:
-            if self.device:
+            if self.device != None:
                 weight = self.device.read(16)
                 return self.parse_weight(weight)
-            elif self.device is None:
+            elif self.device == None:
                 return 0.00
 
         except Exception as e:

@@ -131,9 +131,6 @@ class App(QWidget):
         self.statusText = QLabel('Standby')
         self.statusText.setObjectName('title')
         button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignRight)
-        self.threadpool.signals.finished.connect(lambda: self.statusText.setText('Standby'))
-        self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
-        self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
         
         
         self.execute_button = QPushButton('Execute', self)
@@ -153,9 +150,13 @@ class App(QWidget):
 
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
-        self.threadpool.motor_thread.started.connect(self.draw_execute_button)
-        self.threadpool.motor_thread.started.connect(self.reset_graph)
-        self.threadpool.motor_thread.finished.connect(self.draw_execute_button)
+        self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
+        self.threadpool.motor_thread.signals.start.connect(self.reset_graph)
+        self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
+        
+        self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
+        self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
+        self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
         
         self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
         
@@ -178,7 +179,7 @@ class App(QWidget):
             # Get the command set from each control center
             command_set = control_center.get_commands()
             commands.append(command_set)
-        print('Commands:', commands)
+            print('Commands:', command_set)
         return commands
      
     
