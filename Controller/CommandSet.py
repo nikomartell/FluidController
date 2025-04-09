@@ -1,8 +1,8 @@
 class CommandSet:
-    def __init__(self, component="Rotary Motor", speed=500, strokes=10, acceleration=10, flow_direction="Dispense", duration=3, iterations=1):
+    def __init__(self, component="Rotary Motor", speed=500, strokes=0, acceleration=10, flow_direction="Dispense", duration=3, iterations=1):
         self.component = component
         self.speed = int(speed) if speed != '' else 500
-        self.strokes = int(strokes) if strokes != '' else 10
+        self.strokes = int(strokes) if strokes != '' else 0
         self.acceleration = int(acceleration) if acceleration != '' else 10
         self.flow_direction = flow_direction
         self.duration = int(duration) if duration != '' else 3

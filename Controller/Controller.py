@@ -11,7 +11,7 @@ class Controller(QObject):
         self.module = TMCM3110(interface) if interface else None
         self.rotary = self.module.motors[0] if interface else None
         self.linear = self.module.motors[1] if interface else None
-        self.rotary_home = 1600
+        self.rotary_home = 6400
         if interface:
             self.linear.stop()
             self.rotary.stop()
@@ -24,12 +24,6 @@ class Controller(QObject):
             self.errors[1] = 'Linear Motor not found'
         if not self.scale.device:
             self.errors[2] = 'Scale not found'
-            
-        #print(self.linear.stallguard2.get_filter())
-        #print(self.linear.stallguard2.get_threshold())
-        
-        #print(self.rotary.stallguard2.get_filter())
-        #print(self.rotary.stallguard2.get_threshold())
     
     def set_motors(self, interface):
         self.module = TMCM3110(interface)

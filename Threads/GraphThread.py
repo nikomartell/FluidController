@@ -7,7 +7,7 @@ import pandas as pd
 
 class GraphThread(QThread):
     
-    def __init__(self, scale, precision = 3):
+    def __init__(self, scale, precision = 1):
         super().__init__()
         self.signals = GraphSignal()
         self._paused = False
