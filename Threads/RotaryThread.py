@@ -29,7 +29,7 @@ class RotaryThread(QThread):
                 
                 command.print()
                 
-                interval = 0.0001
+                interval = 0.01
                 
                 self.signals.start.emit()
                 if isinstance(self.controller, Controller):
@@ -58,9 +58,9 @@ class RotaryThread(QThread):
                         self.motor.set_actual_position(position)
                         # If the motor is not at the default position, move it to the default position
                         self.signals.toZero.emit()
-                        self.motor.move_to(0, velocity=100)
+                        
                         while self.motor.actual_position != 0:
-                            
+                            self.motor.move_to(0, velocity=100)
                             # If the thread is not running, stop the motor and break out of the loop
                             if not self._is_running:
                                 self.motor.stop()
@@ -79,14 +79,20 @@ class RotaryThread(QThread):
                         
                         self.signals.execute.emit()
                         self.task(command)
+                        start_time = time.time()
                         timer = 0
-                        duration = command.duration
+                        duration = float(command.duration)
                         total_steps = command.strokes * self.controller.rotary_home
                         # While the motor is running, keep rotating the motor at the set Flow Rate
-                        while (timer < duration) & self._is_running & (self.motor.actual_position != total_steps):
+                        while timer < duration and self._is_running:
+                            if abs(self.motor.actual_position) == total_steps:
+                                self.motor.stop()
+                                break
+                            
                             print('Current Position:', self.motor.get_actual_position())
-                            time.sleep(interval)
-                            timer += interval
+                            timer = time.time() - start_time
+                            timer = round(timer, 2)
+                            print('Timer:', timer)
                         
                         self.signals.finished.emit()
                         self.motor.stop()
@@ -125,15 +131,20 @@ class RotaryThread(QThread):
         if isinstance(command, CommandSet):
             # Rotate the motor at the set Flow Rate for the specified duration.
             self.motor.max_acceleration = command.acceleration
-            self.motor.max_velocity = command.speed
-            if command.strokes > 0:
+            
+            total_steps = 0
+            speed = 0
+            if command.flow_direction == 'Dispense':
+                speed = command.speed
                 total_steps = command.strokes * self.controller.rotary_home
-                if command.flow_direction == 'Dispense':
-                    self.motor.move_to(total_steps, velocity=command.speed)
-                elif command.flow_direction == 'Aspirate':
-                    self.motor.move_to(-total_steps, velocity=command.speed)
+            elif command.flow_direction == 'Aspirate':
+                speed = -command.speed
+                total_steps = -command.strokes * self.controller.rotary_home
+            
+            if total_steps != 0:
+                self.motor.move_to(total_steps, velocity=speed)
             else:
-                self.motor.rotate(command.speed)
+                self.motor.rotate(speed)
         else:
             raise TypeError(f'Expected CommandSet, got {type(command)}')
 

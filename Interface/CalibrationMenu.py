@@ -22,15 +22,9 @@ class CalibrationMenu(QMainWindow):
             
             self.layout = QVBoxLayout(self.central_widget)
             
-            # Title
-            self.title_label = QLabel("Calibration Menu", self)
-            self.title_label.setObjectName("title")
-            self.title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-            self.layout.addWidget(self.title_label)
-            
             # Current Position
             self.current_position_label = QLabel("Current Position:", self)
-            self.current_position_label.setObjectName("label")
+            self.current_position_label.setObjectName("title")
             self.layout.addWidget(self.current_position_label)
             
             self.position_label = QLabel(str(self.rotary.actual_position), self)

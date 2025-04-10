@@ -147,7 +147,7 @@ class App(QWidget):
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
         self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
-        self.threadpool.motor_thread.signals.start.connect(self.reset_graph)
+        self.threadpool.signals.started.connect(self.reset_graph)
         self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
         
         self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
@@ -160,6 +160,9 @@ class App(QWidget):
         
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         self.threadpool.start_connection()
+        
+        self.flow_rate = self.calculate_flow_rate()
+        self.threadpool.signals.data.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.calculate_flow_rate())))
         
         
         # Testing Area. Commment out contents before use #
@@ -283,6 +286,16 @@ class App(QWidget):
         self.ax.relim()
         self.ax.autoscale_view()
         self.fig.canvas.draw_idle()
+    
+    def calculate_flow_rate(self):
+        # Calculate the flow rate based on the data collected
+        if len(self.data) > 1:
+            time_diff = self.data['Time'].diff().iloc[1:]
+            weight_diff = self.data['Weight'].diff().iloc[1:]
+            flow_rate = weight_diff / time_diff
+            self.flow_rate = round(flow_rate.mean(), 3)
+            return self.flow_rate
+        return 0.0
     
     #---------------------------------------------------------#
     

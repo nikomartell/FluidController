@@ -61,7 +61,7 @@ class ThreadPool(QThreadPool):
         
         self.motor_thread.start()
         
-        self.signals.finished.emit()
+        self.signals.started.emit()
     
     # Set the precision of the threads
     def set_precision(self, precision):
