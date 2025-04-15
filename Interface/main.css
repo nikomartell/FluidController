@@ -120,3 +120,14 @@ QMenu::item:selected {
     background-color: #0B41CD;
     color: #ffffff;
 }
+
+QTabBar::tab:selected {
+    background-color: #545860;
+    padding: 10px;
+    border: 2px solid #0B41CD;
+}
+
+QTabBar::tab:selected {
+    background-color: #0B41CD;
+    color: #ffffff;
+}

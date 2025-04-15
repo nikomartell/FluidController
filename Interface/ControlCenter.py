@@ -40,11 +40,11 @@ class ControlCenter(QWidget):
         
         #----------Motion Settings----------#
         
-        # self.Component
+        # Component
         componentLabel = QLabel('Component:', self.Container)
         self.component = QComboBox()
         self.component.setObjectName('self.component')
-        self.component.addItems(['Rotary Motor', 'Linear Motor'])
+        self.component.addItems(['Rotary Motor'])
         
         componentLayout = QVBoxLayout()
         componentLayout.setAlignment(Qt.AlignmentFlag.AlignBottom)
@@ -55,24 +55,14 @@ class ControlCenter(QWidget):
         # Flow Rate
         speedLabel = QLabel('Speed (RPM):', self.Container)
         self.speed = QLineEdit()
-        self.speed.setPlaceholderText('Default: 1.0')
-        self.speed.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        self.speed.setPlaceholderText('Default: 500')
+        self.speed.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         speedLayout = QVBoxLayout()
         speedLayout.addWidget(speedLabel, alignment=Qt.AlignmentFlag.AlignTop)
         speedLayout.addWidget(self.speed, alignment=Qt.AlignmentFlag.AlignTop)
         motion_layout.addLayout(speedLayout)
         
-        # Strokes
-        strokesLabel = QLabel('Strokes(Rotations):', self.Container)
-        self.strokes = QLineEdit()
-        self.strokes.setPlaceholderText('Default: 10.0')
-        self.strokes.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
-        
-        strokesLayout = QVBoxLayout()
-        strokesLayout.addWidget(strokesLabel, alignment=Qt.AlignmentFlag.AlignTop)
-        strokesLayout.addWidget(self.strokes, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.addLayout(strokesLayout)
         
         # Acceleration
         accelerationLabel = QLabel('Acceleration (Ml/sec^2):', self.Container)
@@ -100,13 +90,24 @@ class ControlCenter(QWidget):
         # Duration
         durationLabel = QLabel('Duration (Seconds):', self.Container)
         self.duration = QLineEdit()
-        self.duration.setPlaceholderText('Default: 10.0')
+        self.duration.setPlaceholderText('Default: 5')
         self.duration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         durationLayout = QVBoxLayout()
         durationLayout.addWidget(durationLabel, alignment=Qt.AlignmentFlag.AlignTop)
         durationLayout.addWidget(self.duration, alignment=Qt.AlignmentFlag.AlignTop)
         end_case_layout.addLayout(durationLayout)
+        
+        # Strokes
+        strokesLabel = QLabel('Strokes(Rotations):', self.Container)
+        self.strokes = QLineEdit()
+        self.strokes.setPlaceholderText('Default: 0')
+        self.strokes.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        
+        strokesLayout = QVBoxLayout()
+        strokesLayout.addWidget(strokesLabel, alignment=Qt.AlignmentFlag.AlignTop)
+        strokesLayout.addWidget(self.strokes, alignment=Qt.AlignmentFlag.AlignTop)
+        end_case_layout.addLayout(strokesLayout)
         
         # Iterations
         iterationsLabel = QLabel('Iterations:', self.Container)

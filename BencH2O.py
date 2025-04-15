@@ -97,18 +97,28 @@ class App(QWidget):
         # Device Control Center
         self.control_layout = QHBoxLayout()
         self.deviceControl = ControlCenter()
-        self.control_layout.addWidget(self.deviceControl.Container, alignment=Qt.AlignmentFlag.AlignTop)
         # Add a tab widget to hold multiple control centers
         self.control_tabs = QTabWidget()
         
         # Add the initial control center tab
         self.control_tabs.addTab(self.deviceControl.Container, "1")
+        self.control_tabs.setObjectName('tab_bar')
         
         # Button to add a new control center
         self.add_tab_button = QPushButton("Add Control Center", self)
         self.add_tab_button.setToolTip("Add a new control center tab")
         self.add_tab_button.clicked.connect(self.add_control_center_tab)
-        self.control_layout.addWidget(self.add_tab_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        
+        self.remove_tab_button = QPushButton("Remove Control Center", self)
+        self.remove_tab_button.setToolTip("Remove the last control center tab")
+        self.remove_tab_button.clicked.connect(self.remove_control_center_tab)
+        
+        control_buttons = QVBoxLayout()
+        control_buttons.addWidget(self.add_tab_button)
+        control_buttons.addWidget(self.remove_tab_button)
+        control_buttons.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.control_layout.addLayout(control_buttons)
+
         self.control_layout.addWidget(self.control_tabs)
         self.control_sets = []
 
@@ -207,6 +217,17 @@ class App(QWidget):
         self.control_sets.append(new_control_center)
         if commands is not None:
             new_control_center.set_commands(commands)
+            
+    def remove_control_center_tab(self):
+        # Remove the current control center tab
+        if self.control_tabs.count() > 1:
+            self.control_tabs.removeTab(self.control_tabs.currentIndex())
+            # Remove the corresponding control center from the list
+            self.control_sets.pop()
+            for i in range(self.control_tabs.count()):
+                self.control_tabs.setTabText(i, str(i + 1))
+        else:
+            QMessageBox.warning(self, "Warning", "Cannot remove the last control center tab.")
     
     # Update Analysis Center based on connection status ----------- #
     def draw_analysis(self):

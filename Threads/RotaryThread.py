@@ -29,21 +29,10 @@ class RotaryThread(QThread):
                 
                 command.print()
                 
-                interval = 0.01
                 
                 self.signals.start.emit()
-                if isinstance(self.controller, Controller):
-                    match command.component:
-                        case 'Linear Motor':
-                            self.motor = self.controller.linear
-                        case 'Rotary Motor':    
-                            self.motor = self.controller.rotary
-                        case _:
-                            QMessageBox.critical(None, 'Error', f'Error: {e}')
-                else:
-                    QMessageBox.critical(None, 'Error', 'Error: Controller not found')
-                    self.signals.finished.emit()
-                    return
+                if isinstance(self.controller, Controller):  
+                    self.motor = self.controller.rotary
                 
                 # Move the motor to Default position
                 try:

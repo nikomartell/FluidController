@@ -14,7 +14,6 @@ def apply_style(parent):
             font-family: 'Open Sans', sans-serif;
             font-size: 14px;
             border: 2px solid #0B41CD;
-            border-radius: 5px;
         }
 
         QWidget#AnalysisCenter {
@@ -80,19 +79,17 @@ def apply_style(parent):
         QComboBox {
             background-color: #ffffff;
             border: 1px solid #333333;
-            border-radius: 5px;
             padding: 5px;
             max-width: 200px;
         }
         
-        QTabWidget::tab:selected {
-            background-color: #545860;
+        QTabBar::tab {
+            background-color: #ffffff;
             padding: 10px;
             border: 2px solid #0B41CD;
-            border-radius: 5px;
         }
         
-        QTabWidget::tab:selected {
+        QTabBar::tab:selected {
             background-color: #0B41CD;
             color: #ffffff;
         }

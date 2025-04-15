@@ -1,4 +1,4 @@
-from ftd2xx import ftd2xx as ftd
+from pyftdi import *
 from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtCore import QDeadlineTimer, QObject
