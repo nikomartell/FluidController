@@ -6,3 +6,4 @@ output/
 **/__pycache__
 .venv
 Bench2O.spec
+.devcontainer/

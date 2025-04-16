@@ -1,6 +1,6 @@
 matplotlib
-pyqt6
 numpy
 pandas
 ftd2xx
 pytrinamic
+pyqt6

@@ -40,6 +40,9 @@ class App(QWidget):
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
         self.graph.set_data(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
+        self.ax.set_xlabel('Time (s)')
+        self.ax.set_ylabel('Weight (g)')
+        self.ax.set_title('Weight vs Time')
         self.initUI()
             
     
