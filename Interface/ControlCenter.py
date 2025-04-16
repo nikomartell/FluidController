@@ -67,7 +67,7 @@ class ControlCenter(QWidget):
         # Acceleration
         accelerationLabel = QLabel('Acceleration (Ml/sec^2):', self.Container)
         self.acceleration = QLineEdit()
-        self.acceleration.setPlaceholderText('Default: 0.0')
+        self.acceleration.setPlaceholderText('Default: 10')
         self.acceleration.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
         
         accelerationLayout = QVBoxLayout()

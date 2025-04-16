@@ -37,6 +37,15 @@ class GraphThread(QThread):
                     t = round(t, self.precision)
                     self.signals.result.emit(t, self.scale.weight)
                     time.sleep(interval)
+                    
+            timeout = 0
+            while timeout < 1:
+                timeout += interval
+                t += interval
+                t = round(t, self.precision)
+                self.signals.result.emit(t, self.scale.weight)
+                timeout += interval
+                time.sleep(interval)
                 
         except:
             traceback.print_exc()

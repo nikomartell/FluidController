@@ -34,6 +34,7 @@ class App(QWidget):
         
         # Data Collected
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
+        self.control_sets = []
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
@@ -108,22 +109,22 @@ class App(QWidget):
         self.control_tabs.setObjectName('tab_bar')
         
         # Button to add a new control center
-        self.add_tab_button = QPushButton("Add Control Center", self)
-        self.add_tab_button.setToolTip("Add a new control center tab")
-        self.add_tab_button.clicked.connect(self.add_control_center_tab)
+        add_tab_button = QPushButton("Add Control Center", self)
+        add_tab_button.setToolTip("Add a new control center tab")
+        add_tab_button.clicked.connect(self.add_control_center_tab)
         
-        self.remove_tab_button = QPushButton("Remove Control Center", self)
-        self.remove_tab_button.setToolTip("Remove the last control center tab")
-        self.remove_tab_button.clicked.connect(self.remove_control_center_tab)
+        # Button to remove the last control center
+        remove_tab_button = QPushButton("Remove Control Center", self)
+        remove_tab_button.setToolTip("Remove the last control center tab")
+        remove_tab_button.clicked.connect(self.remove_control_center_tab)
         
         control_buttons = QVBoxLayout()
-        control_buttons.addWidget(self.add_tab_button)
-        control_buttons.addWidget(self.remove_tab_button)
+        control_buttons.addWidget(add_tab_button)
+        control_buttons.addWidget(remove_tab_button)
         control_buttons.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.control_layout.addLayout(control_buttons)
 
         self.control_layout.addWidget(self.control_tabs)
-        self.control_sets = []
 
         # System Control (change this button to refresh device connection)
         button_layout = QHBoxLayout()
@@ -160,23 +161,20 @@ class App(QWidget):
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
         self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
-        self.threadpool.signals.started.connect(self.reset_graph)
         self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
+        
+        self.threadpool.signals.started.connect(self.reset_graph)
+        self.threadpool.signals.log.connect(lambda t, w: self.update_graph(t, w))
+        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
+        self.threadpool.signals.data.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.calculate_flow_rate())))
+        self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.average_flow_rate())))
         
         self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
         self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
         self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
         
-        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
-        
-        self.threadpool.signals.log.connect(lambda t, w: self.update_graph(t, w))
-        
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         self.threadpool.start_connection()
-        
-        self.flow_rate = self.calculate_flow_rate()
-        self.threadpool.signals.data.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.calculate_flow_rate())))
-        
         
         # Testing Area. Commment out contents before use #
         # self.graph_thread.start()
@@ -320,6 +318,14 @@ class App(QWidget):
             self.flow_rate = round(flow_rate.mean(), 3)
             return self.flow_rate
         return 0.0
+    
+    def average_flow_rate(self):
+        if len(self.data) > 1:
+            total_weight = self.data['Weight'].iloc[-1] - self.data['Weight'].iloc[0]
+            total_time = self.data['Time'].iloc[-1] - self.data['Time'].iloc[0]
+            if total_time > 0:
+                return round(total_weight / total_time, 3)
+        return 0.00
     
     #---------------------------------------------------------#
     

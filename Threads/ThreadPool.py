@@ -46,8 +46,6 @@ class ThreadPool(QThreadPool):
     def start_process(self, command_set):
         
         # Start the graph thread but pause it until a command is given
-        self.graph_thread.pause()
-        self.graph_thread.start()
         
         self.motor_thread.command_set = command_set
         
@@ -55,8 +53,7 @@ class ThreadPool(QThreadPool):
         self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
         
         # Set motor thread signal connections
-        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.resume())
-        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.pause())
+        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
         self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         
         self.motor_thread.start()
