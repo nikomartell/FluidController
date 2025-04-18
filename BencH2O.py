@@ -17,6 +17,7 @@ from Interface.ControlCenter import ControlCenter
 from Interface.CalibrationMenu import CalibrationMenu
 import csv
 import os
+from PyQt6.QtGui import QIcon
 
 class App(QWidget):
     def __init__(self):        
@@ -44,6 +45,9 @@ class App(QWidget):
         self.ax.set_xlabel('Time (s)')
         self.ax.set_ylabel('Weight (g)')
         self.ax.set_title('Weight vs Time')
+        
+        self.setWindowIcon(QIcon('interface/logo.png'))
+        
         self.initUI()
             
     
@@ -53,7 +57,7 @@ class App(QWidget):
         apply_style(self)
         
         # Setup
-        self.setWindowTitle('Fluidics Device Controller')
+        self.setWindowTitle('BencH2O Fluidics Delivery')
         self.layout = QVBoxLayout()
         
         self.draw_errorLayout()
