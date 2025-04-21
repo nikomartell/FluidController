@@ -2,7 +2,7 @@ from PyQt6 import QtCore
 from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal, QThread, QThreadPool
 from Threads.GraphThread import GraphThread
-from Threads.RotaryThread import RotaryThread
+from Threads.MotorThread import MotorThread
 from Threads.ConnectionThread import ConnectionThread
 from Threads.WeightThread import WeightThread
 from Controller.Controller import Controller
@@ -17,7 +17,7 @@ class ThreadPool(QThreadPool):
         
         
         # Initialize Threads
-        self.motor_thread = RotaryThread(self.controller)
+        self.motor_thread = MotorThread(self.controller)
         self.graph_thread = GraphThread(self.controller.scale)
         self.weight_thread = WeightThread(self.controller.scale)
         self.connection_thread = ConnectionThread(self.controller)

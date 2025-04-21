@@ -61,28 +61,27 @@ class CalibrationMenu(QMainWindow):
         elif event.key() == Qt.Key.Key_Space:
             self.set_home()
             
-
+            
     def key_release_event(self, event):
+        # When an arrow key is released, stop the motor from rotating
         if event.key() == Qt.Key.Key_Right:
             self.right_key_pressed = False
             self.rotary.stop()
         elif event.key() == Qt.Key.Key_Left:
             self.left_key_pressed = False
             self.rotary.stop()
-        
-        
 
 
     def start_moving_right(self):
         if self.right_key_pressed:
             self.move_right()
-            QTimer.singleShot(10, self.start_moving_right)
+            QTimer.singleShot(5, self.start_moving_right)
             self.position_label.setText(str(self.rotary.actual_position))
     
     def start_moving_left(self):
         if self.left_key_pressed:
             self.move_left()
-            QTimer.singleShot(10, self.start_moving_left)
+            QTimer.singleShot(5, self.start_moving_left)
             self.position_label.setText(str(self.rotary.actual_position))
     
     

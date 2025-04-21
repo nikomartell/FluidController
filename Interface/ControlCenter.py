@@ -19,19 +19,19 @@ class ControlCenter(QWidget):
         
         # Section Titles and creation
         
-        motion_layout = QVBoxLayout(self.Container)
-        motion_layout.setContentsMargins(0, 0, 30, 0)
+        self.motion_layout = QVBoxLayout(self.Container)
+        self.motion_layout.setContentsMargins(0, 0, 30, 0)
         motionSettings = QLabel('Motion Settings', self.Container)
         motionSettings.setObjectName('title')
-        motion_layout.addWidget(motionSettings, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.motion_layout.addWidget(motionSettings, alignment=Qt.AlignmentFlag.AlignTop)
+        self.motion_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        end_case_layout = QVBoxLayout(self.Container)
-        end_case_layout.setContentsMargins(0, 0, 30, 0)
+        self.end_case_layout = QVBoxLayout(self.Container)
+        self.end_case_layout.setContentsMargins(0, 0, 30, 0)
         endCase = QLabel('End Case Settings', self.Container)
         endCase.setObjectName('title')
-        end_case_layout.addWidget(endCase, alignment=Qt.AlignmentFlag.AlignTop)
-        end_case_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.end_case_layout.addWidget(endCase, alignment=Qt.AlignmentFlag.AlignTop)
+        self.end_case_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         button_layout = QHBoxLayout(self.Container)
         button_layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
@@ -40,17 +40,48 @@ class ControlCenter(QWidget):
         
         #----------Motion Settings----------#
         
-        # Component
-        componentLabel = QLabel('Component:', self.Container)
-        self.component = QComboBox()
-        self.component.setObjectName('self.component')
-        self.component.addItems(['Rotary Motor'])
+        self.set_motion_layout()
         
-        componentLayout = QVBoxLayout()
-        componentLayout.setAlignment(Qt.AlignmentFlag.AlignBottom)
-        componentLayout.addWidget(componentLabel, alignment=Qt.AlignmentFlag.AlignTop)
-        componentLayout.addWidget(self.component, alignment=Qt.AlignmentFlag.AlignTop)
-        top_layout.addLayout(componentLayout)
+        #----------End Case Settings----------#
+        
+        self.set_end_case_layout()
+        
+        #---------------------------------------------------------#
+        
+        device_layout.addLayout(self.motion_layout)
+        device_layout.addLayout(self.end_case_layout)
+        
+        top_layout.addLayout(device_layout)
+        top_layout.addLayout(button_layout)
+        
+        
+        # Send Commands from text boxes to device
+    def get_commands(self):
+        # Functions used for each variable translates input to commands
+        speed = self.speed.text()
+        strokes = self.strokes.text()
+        acceleration = self.acceleration.text()
+        flow_direction = self.flow_direction.currentText()
+        duration = self.duration.text()
+        iterations = self.iterations.text()
+        position = self.linear_position.text()
+        
+        commands = CommandSet(speed, strokes, acceleration, 
+                              flow_direction, duration, iterations, position)
+            
+        return commands
+        
+    def set_commands(self, command):
+        if isinstance(command, CommandSet):
+            self.speed.setText(command.speed)
+            self.strokes.setText(command.strokes)
+            self.acceleration.setText(command.acceleration)
+            self.flow_direction.setCurrentText(command.flow_direction)
+            self.duration.setText(command.duration)
+            self.iterations.setText(command.iterations)
+            self.linear_position.setText(command.position)
+    
+    def set_motion_layout(self):
         
         # Flow Rate
         speedLabel = QLabel('Speed (RPM):', self.Container)
@@ -61,19 +92,19 @@ class ControlCenter(QWidget):
         speedLayout = QVBoxLayout()
         speedLayout.addWidget(speedLabel, alignment=Qt.AlignmentFlag.AlignTop)
         speedLayout.addWidget(self.speed, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.addLayout(speedLayout)
+        self.motion_layout.addLayout(speedLayout)
         
         
         # Acceleration
         accelerationLabel = QLabel('Acceleration (Ml/sec^2):', self.Container)
         self.acceleration = QLineEdit()
         self.acceleration.setPlaceholderText('Default: 10')
-        self.acceleration.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        self.acceleration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         accelerationLayout = QVBoxLayout()
         accelerationLayout.addWidget(accelerationLabel, alignment=Qt.AlignmentFlag.AlignTop)
         accelerationLayout.addWidget(self.acceleration, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.addLayout(accelerationLayout)
+        self.motion_layout.addLayout(accelerationLayout)
         
         # Flow Direction
         flowDirectionLabel = QLabel('Flow Direction:', self.Container)
@@ -83,76 +114,51 @@ class ControlCenter(QWidget):
         flowDirectionLayout = QVBoxLayout()
         flowDirectionLayout.addWidget(flowDirectionLabel, alignment=Qt.AlignmentFlag.AlignTop)
         flowDirectionLayout.addWidget(self.flow_direction, alignment=Qt.AlignmentFlag.AlignTop)
-        motion_layout.addLayout(flowDirectionLayout)
+        self.motion_layout.addLayout(flowDirectionLayout)
         
-        #----------End Case Settings----------#
+        # linear Position
+        linearPositionLabel = QLabel('Linear Position:', self.Container)
+        self.linear_position = QLineEdit()
+        self.linear_position.setPlaceholderText('Default: Current')
+        self.linear_position.setValidator(QDoubleValidator(-1600, 100.0, 0)) # Allow only integers
+        
+        linearPositionLayout = QVBoxLayout()
+        linearPositionLayout.addWidget(linearPositionLabel, alignment=Qt.AlignmentFlag.AlignTop)
+        linearPositionLayout.addWidget(self.linear_position, alignment=Qt.AlignmentFlag.AlignTop)
+        self.motion_layout.addLayout(linearPositionLayout)
+        
+        
+    def set_end_case_layout(self):
         
         # Duration
         durationLabel = QLabel('Duration (Seconds):', self.Container)
         self.duration = QLineEdit()
         self.duration.setPlaceholderText('Default: 5')
-        self.duration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
+        self.duration.setValidator(QDoubleValidator(0.0, 10.0, 2))  # Allow only numbers with up to 2 decimal places
         
         durationLayout = QVBoxLayout()
         durationLayout.addWidget(durationLabel, alignment=Qt.AlignmentFlag.AlignTop)
         durationLayout.addWidget(self.duration, alignment=Qt.AlignmentFlag.AlignTop)
-        end_case_layout.addLayout(durationLayout)
+        self.end_case_layout.addLayout(durationLayout)
         
         # Strokes
         strokesLabel = QLabel('Strokes(Rotations):', self.Container)
         self.strokes = QLineEdit()
         self.strokes.setPlaceholderText('Default: 0')
-        self.strokes.setValidator(QDoubleValidator(0.0, 100.0, 2))  # Allow only numbers with up to 2 decimal places
+        self.strokes.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         strokesLayout = QVBoxLayout()
         strokesLayout.addWidget(strokesLabel, alignment=Qt.AlignmentFlag.AlignTop)
         strokesLayout.addWidget(self.strokes, alignment=Qt.AlignmentFlag.AlignTop)
-        end_case_layout.addLayout(strokesLayout)
+        self.end_case_layout.addLayout(strokesLayout)
         
         # Iterations
         iterationsLabel = QLabel('Iterations:', self.Container)
         self.iterations = QLineEdit()
         self.iterations.setPlaceholderText('Default: 1')
-        self.iterations.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only numbers with up to 0 decimal places
+        self.iterations.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         iterationsLayout = QVBoxLayout()
         iterationsLayout.addWidget(iterationsLabel, alignment=Qt.AlignmentFlag.AlignTop)
         iterationsLayout.addWidget(self.iterations, alignment=Qt.AlignmentFlag.AlignTop)
-        end_case_layout.addLayout(iterationsLayout)        
-        
-        #---------------------------------------------------------#
-        
-        device_layout.addLayout(motion_layout)
-        device_layout.addLayout(end_case_layout)
-        
-        top_layout.addLayout(device_layout)
-        top_layout.addLayout(button_layout)
-        
-        
-        # Send Commands from text boxes to device
-    def get_commands(self):
-        # Functions used for each variable translates input to commands
-        component = self.component.currentText()
-        speed = self.speed.text()
-        strokes = self.strokes.text()
-        acceleration = self.acceleration.text()
-        flow_direction = self.flow_direction.currentText()
-        duration = self.duration.text()
-        iterations = self.iterations.text()
-        
-        commands = CommandSet(component, speed, strokes, acceleration, 
-                              flow_direction, duration, iterations)
-            
-        return commands
-        
-    def set_commands(self, command):
-        if isinstance(command, CommandSet):
-            self.component.setCurrentText(command.component)
-            self.speed.setText(command.speed)
-            self.strokes.setText(command.strokes)
-            self.acceleration.setText(command.acceleration)
-            self.flow_direction.setCurrentText(command.flow_direction)
-            self.duration.setText(command.duration)
-            self.iterations.setText(command.iterations)
-        
-        
+        self.end_case_layout.addLayout(iterationsLayout) 

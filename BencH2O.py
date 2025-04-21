@@ -60,67 +60,34 @@ class App(QWidget):
         self.setWindowTitle('BencH2O Fluidics Delivery')
         self.layout = QVBoxLayout()
         
-        self.draw_errorLayout()
+        self.drawErrorLayout()
         self.layout.addLayout(self.errorLayout)
         
         #---------------------------------------------------------#
 
-        # Window Action Items
-        menubar = QMenuBar(self)
-        
-        #File Menu
-        file_menu = menubar.addMenu('File')
-        export_action = QAction('Save Config', self)
-        export_action.triggered.connect(self.store_commands_to_csv)
-        import_action = QAction('Import Config', self)
-        import_action.triggered.connect(self.import_commands_from_csv)
-        export_data_action = QAction('Export Data', self)
-        export_data_action.triggered.connect(self.export_data_to_csv)
-        file_menu.addAction(export_action)
-        file_menu.addAction(import_action)
-        file_menu.addAction(export_data_action)
-        
-        
-        #Settings Menu
-        settings_menu = menubar.addMenu('Settings')
-        motor_settings_action = QAction('Change Motor Settings', self)
-        scale_settings_action = QAction('Change Scale Settings', self)
-        settings_menu.addAction(motor_settings_action)
-        settings_menu.addAction(scale_settings_action)
-        
-        #Tools Menu
-        tools_menu = menubar.addMenu('Tools')
-        calibrate_action = QAction('Calibrate Rotary Motor', self)
-        calibrate_action.triggered.connect(self.open_rotary_calibration)
-        tools_menu.addAction(calibrate_action)
-        
-        #Help Menu
-        help_menu = menubar.addMenu('Help')
-        self.layout.setMenuBar(menubar)
-        help_action = QAction('Manual', self)
-        help_menu.addAction(help_action)
+        self.makeMenuBar()
         
         #---------------------------------------------------------#
         
         # Device Control Center
         self.control_layout = QHBoxLayout()
-        self.deviceControl = ControlCenter()
+        self.device_control = ControlCenter()
         # Add a tab widget to hold multiple control centers
         self.control_tabs = QTabWidget()
         
         # Add the initial control center tab
-        self.control_tabs.addTab(self.deviceControl.Container, "1")
+        self.control_tabs.addTab(self.device_control.Container, "1")
         self.control_tabs.setObjectName('tab_bar')
         
         # Button to add a new control center
         add_tab_button = QPushButton("Add Control Center", self)
         add_tab_button.setToolTip("Add a new control center tab")
-        add_tab_button.clicked.connect(self.add_control_center_tab)
+        add_tab_button.clicked.connect(self.addControlCenterTab)
         
         # Button to remove the last control center
         remove_tab_button = QPushButton("Remove Control Center", self)
         remove_tab_button.setToolTip("Remove the last control center tab")
-        remove_tab_button.clicked.connect(self.remove_control_center_tab)
+        remove_tab_button.clicked.connect(self.removeControlCenterTab)
         
         control_buttons = QVBoxLayout()
         control_buttons.addWidget(add_tab_button)
@@ -129,29 +96,31 @@ class App(QWidget):
         self.control_layout.addLayout(control_buttons)
 
         self.control_layout.addWidget(self.control_tabs)
-
-        # System Control (change this button to refresh device connection)
-        button_layout = QHBoxLayout()
         
         # Analysis Center
         self.analysis_layout = QVBoxLayout()
-        self.analysisCenter = AnalysisCenter()
-        self.graph_widget = QWidget(self.analysisCenter.Container)
-        self.analysisCenter.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
-        self.analysis_layout.addWidget(self.analysisCenter.Container)
-        self.analysisCenter.tareScale.clicked.connect(self.tare)
+        self.analysis_center = AnalysisCenter()
+        self.graph_widget = QWidget(self.analysis_center.Container)
+        self.analysis_center.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
+        self.analysis_layout.addWidget(self.analysis_center.Container)
+        self.analysis_center.tareScale.clicked.connect(self.tare)
         
+        button_layout = QHBoxLayout()
+        
+        # Prime button for allowing user to manually prime system
+        prime_button = QPushButton('Prime Tubing')
+        prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
+        button_layout.addWidget(prime_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
         self.statusText = QLabel('Standby')
         self.statusText.setObjectName('title')
-        button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignRight)
-        
+        button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignHCenter)
         
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
         self.execute_button.setText('Execute')
         self.execute_button.clicked.connect(self.execute)
-        self.draw_execute_button()
+        self.drawExecuteButton()
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         
@@ -164,14 +133,14 @@ class App(QWidget):
 
         # Connection Signals
         # UI Elements are updated based on the connection status of the device
-        self.threadpool.motor_thread.signals.start.connect(self.draw_execute_button)
-        self.threadpool.motor_thread.signals.finished.connect(self.draw_execute_button)
+        self.threadpool.motor_thread.signals.start.connect(self.drawExecuteButton)
+        self.threadpool.motor_thread.signals.finished.connect(self.drawExecuteButton)
         
-        self.threadpool.signals.started.connect(self.reset_graph)
-        self.threadpool.signals.log.connect(lambda t, w: self.update_graph(t, w))
-        self.threadpool.signals.data.connect(lambda weight: self.analysisCenter.weightLabel.setText(weight))
-        self.threadpool.signals.data.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.calculate_flow_rate())))
-        self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysisCenter.flowRateLabel.setText(str(self.average_flow_rate())))
+        self.threadpool.signals.started.connect(self.resetGraph)
+        self.threadpool.signals.log.connect(lambda t, w: self.updateGraph(t, w))
+        self.threadpool.signals.data.connect(lambda weight: self.analysis_center.weightLabel.setText(weight))
+        self.threadpool.signals.data.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.calculateFlowRate())))
+        self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.averageFlowRate())))
         
         self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
         self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
@@ -187,7 +156,7 @@ class App(QWidget):
     
     # Methods ---------- #
     
-    def get_commands(self):
+    def getCommands(self):
         commands = []
         for control_center in self.control_sets:
             # Get the command set from each control center
@@ -202,7 +171,44 @@ class App(QWidget):
     
     # Update Layouts ----------- #
     
-    def draw_errorLayout(self):
+    def makeMenuBar(self):
+        # Window Action Items
+        menubar = QMenuBar(self)
+        
+        #File Menu
+        file_menu = menubar.addMenu('File')
+        export_action = QAction('Save Config', self)
+        export_action.triggered.connect(self.storeCommandsToCSV)
+        import_action = QAction('Import Config', self)
+        import_action.triggered.connect(self.importCommandsFromCSV)
+        export_data_action = QAction('Export Data', self)
+        export_data_action.triggered.connect(self.exportDataToCSV)
+        file_menu.addAction(export_action)
+        file_menu.addAction(import_action)
+        file_menu.addAction(export_data_action)
+        
+        
+        #Settings Menu
+        settings_menu = menubar.addMenu('Settings')
+        motor_settings_action = QAction('Change Motor Settings', self)
+        scale_settings_action = QAction('Change Scale Settings', self)
+        settings_menu.addAction(motor_settings_action)
+        settings_menu.addAction(scale_settings_action)
+        
+        #Tools Menu
+        tools_menu = menubar.addMenu('Tools')
+        calibrate_action = QAction('Calibrate Rotary Motor', self)
+        calibrate_action.triggered.connect(self.openRotaryCalibration)
+        tools_menu.addAction(calibrate_action)
+        
+        #Help Menu
+        help_menu = menubar.addMenu('Help')
+        help_action = QAction('Manual', self)
+        help_menu.addAction(help_action)
+        
+        self.layout.setMenuBar(menubar)
+    
+    def drawErrorLayout(self):
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         rotary_error = QLabel(self.device.errors[0])
@@ -215,7 +221,7 @@ class App(QWidget):
         self.errorLayout.addWidget(linear_error)
         self.errorLayout.addWidget(scale_error)
     
-    def add_control_center_tab(self, commands=None):
+    def addControlCenterTab(self, commands=None):
         # Create a new control center and add it as a new tab
         new_control_center = ControlCenter()
         self.control_tabs.addTab(new_control_center.Container, f"{self.control_tabs.count() + 1}")
@@ -223,7 +229,7 @@ class App(QWidget):
         if commands is not None:
             new_control_center.set_commands(commands)
             
-    def remove_control_center_tab(self):
+    def removeControlCenterTab(self):
         # Remove the current control center tab
         if self.control_tabs.count() > 1:
             self.control_tabs.removeTab(self.control_tabs.currentIndex())
@@ -235,16 +241,16 @@ class App(QWidget):
             QMessageBox.warning(self, "Warning", "Cannot remove the last control center tab.")
     
     # Update Analysis Center based on connection status ----------- #
-    def draw_analysis(self):
+    def drawAnalysis(self):
         if self.device.scale.device is None:
-            #self.analysisCenter.weightLabel.setText('Scale not found')
-            self.analysisCenter.tareScale.setEnabled(False)
+            #self.analysis_center.weightLabel.setText('Scale not found')
+            self.analysis_center.tareScale.setEnabled(False)
         else:
-            self.analysisCenter.tareScale.setEnabled(True)
+            self.analysis_center.tareScale.setEnabled(True)
     
     
     # Update Execute Button based on connection and current state ----------- #
-    def draw_execute_button(self):
+    def drawExecuteButton(self):
         # If the device is not connected, disable the execute button
         if self.device.module is None:
             self.execute_button.setEnabled(False)
@@ -271,7 +277,7 @@ class App(QWidget):
             self.execute_button.clicked.connect(self.execute)
     
     # Open Rotary Motor Calibration Window ----------- #
-    def open_rotary_calibration(self):
+    def openRotaryCalibration(self):
         if self.device.errors[0] is not None:
             QMessageBox.critical(self, "Error", "Rotary motor not found!")
             return
@@ -282,17 +288,17 @@ class App(QWidget):
     # Execute Commands ----------- #
     def execute(self):
         print('Executing commands...')
-        command_set = self.get_commands()
+        command_set = self.getCommands()
         self.threadpool.start_process(command_set)
     
     # Update UI based on connection status ----------- #
     def connected(self):
-        self.draw_errorLayout()
-        self.draw_execute_button()
-        self.draw_analysis()
+        self.drawErrorLayout()
+        self.drawExecuteButton()
+        self.drawAnalysis()
     
     # Update Graph ----------- #
-    def update_graph(self, time, weight):
+    def updateGraph(self, time, weight):
         # Add data to the dataframe
         self.data = pd.concat([self.data, pd.DataFrame({'Time': [time], 'Weight': [weight]})])
         
@@ -304,7 +310,7 @@ class App(QWidget):
         self.ax.autoscale_view()
         self.fig.canvas.draw_idle()
         
-    def reset_graph(self):
+    def resetGraph(self):
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
         x = self.data['Time']
         y = self.data['Weight']
@@ -313,7 +319,7 @@ class App(QWidget):
         self.ax.autoscale_view()
         self.fig.canvas.draw_idle()
     
-    def calculate_flow_rate(self):
+    def calculateFlowRate(self):
         # Calculate the flow rate based on the data collected
         if len(self.data) > 1:
             time_diff = self.data['Time'].diff().iloc[1:]
@@ -323,7 +329,7 @@ class App(QWidget):
             return self.flow_rate
         return 0.0
     
-    def average_flow_rate(self):
+    def averageFlowRate(self):
         if len(self.data) > 1:
             total_weight = self.data['Weight'].iloc[-1] - self.data['Weight'].iloc[0]
             total_time = self.data['Time'].iloc[-1] - self.data['Time'].iloc[0]
@@ -336,36 +342,37 @@ class App(QWidget):
     # File Menu Actions
     
     # Export commands to CSV
-    def store_commands_to_csv(self):
+    def storeCommandsToCSV(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "datasheet", "CSV Files (*.csv);;All Files (*)")
         if file_name:
             with open(file_name, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerow(['Component', 'Speed', 'Strokes', 'Acceleration', 'Flow Direction', 'Duration', 'Iterations'])
-                control_sets = self.get_commands()
+                writer.writerow(['Speed', 'Strokes', 'Acceleration', 'Flow Direction', 'Duration', 'Iterations', 'Position'])
+                control_sets = self.getCommands()
                 for commands in control_sets:
                     writer.writerow(commands.array())
             QMessageBox.information(self, 'Success', f'Commands saved to {file_name}')
 
     # Import commands from CSV
-    def import_commands_from_csv(self):
+    def importCommandsFromCSV(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Import Commands from CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
             with open(file_name, 'r') as csvfile:
                 command_reader = csv.reader(csvfile)
-                commands = [row[1] for row in command_reader if row]
-                self.deviceControl.set_commands(commands)
+                command = [row[1] for row in command_reader if row]
+                inp = CommandSet().set(set = command)
+                self.addControlCenterTab(commands=inp)
             QMessageBox.information(self, 'Success', f'Commands imported from {file_name}')
            
     # Export data to CSV 
-    def export_data_to_csv(self):
+    def exportDataToCSV(self):
         file_name, _ = QFileDialog.getSaveFileName(self, "Save Data to CSV", "", "CSV Files (*.csv);;All Files (*)")
         if file_name:
             self.data.to_csv(file_name)
             QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
     
     # On close, save data to CSV
-    def failsafe_data_csv(self):
+    def failsafeToCSV(self):
         try:
             filepath = os.path.join(os.getcwd(), 'data.csv')
             self.data.to_csv(filepath)
@@ -377,7 +384,7 @@ class App(QWidget):
 if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
-        ex.failsafe_data_csv()
+        ex.failsafeToCSV()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)
