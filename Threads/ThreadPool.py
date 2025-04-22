@@ -44,7 +44,7 @@ class ThreadPool(QThreadPool):
     
     # Start the motor thread
     def start_process(self, command_set):
-        
+        self.signals.started.emit()
         # Start the graph thread but pause it until a command is given
         
         self.motor_thread.command_set = command_set
@@ -54,11 +54,12 @@ class ThreadPool(QThreadPool):
         
         # Set motor thread signal connections
         self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
+        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.quit())
+        self.motor_thread.signals.finished.connect(lambda: self.signals.finished.emit())
         self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         
         self.motor_thread.start()
         
-        self.signals.started.emit()
     
     # Set the precision of the threads
     def set_precision(self, precision):
