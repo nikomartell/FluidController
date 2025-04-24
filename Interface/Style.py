@@ -1,17 +1,19 @@
+from PyQt6 import QtGui
+
 def apply_style(parent):
-    
+    QtGui.QFontDatabase.addApplicationFont("Interface/RocheSans.ttf")
     parent.setStyleSheet("""
         QWidget {
             background-color: #f0f0f0;
             color: black;
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'RocheSans';
             font-size: 14px;
         }
 
         QWidget#ControlCenter {
             background-color: #f0f0f0;
             color: black;
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'RocheSans';
             font-size: 14px;
             border: 2px solid #0B41CD;
         }
@@ -19,7 +21,7 @@ def apply_style(parent):
         QWidget#AnalysisCenter {
             background-color: #f0f0f0;
             color: black;
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'RocheSans';
             font-size: 14px;
         }
 
