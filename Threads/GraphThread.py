@@ -16,13 +16,13 @@ class GraphThread(QThread):
         self._is_running = True
         self.scale = scale
         self.precision = precision
+        self.time = 0
     
     # X is time, Y is weight
     def run(self):
         try:
             # This specifies the interval of time between each data point
             interval = 10 ** -self.precision
-            t = 0
             
             # While the thread is running, keep updating the graph with new data
             while self._is_running:
@@ -33,20 +33,11 @@ class GraphThread(QThread):
                     self._pause_mutex.unlock()
                     
                 else:
-                    t += interval
-                    t = round(t, self.precision)
-                    self.signals.result.emit(t, self.scale.weight)
+                    self.time += interval
+                    self.time = round(self.time, self.precision)
+                    self.signals.result.emit(self.time, self.scale.weight)
                     time.sleep(interval)
                     
-            timeout = 0
-            while timeout < 1:
-                timeout += interval
-                t += interval
-                t = round(t, self.precision)
-                self.signals.result.emit(t, self.scale.weight)
-                timeout += interval
-                time.sleep(interval)
-                
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
@@ -67,6 +58,9 @@ class GraphThread(QThread):
         self._paused = False
         self._pause_condition.wakeAll()
         self._pause_mutex.unlock()
+    
+    def reset(self):
+        self.time = 0
         
 class GraphSignal(QObject):
     finished = pyqtSignal()

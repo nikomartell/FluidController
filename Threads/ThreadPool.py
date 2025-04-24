@@ -53,8 +53,10 @@ class ThreadPool(QThreadPool):
         self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
         
         # Set motor thread signal connections
+        self.motor_thread.signals.start.connect(self.graph_thread.reset)
         self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
-        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.quit())
+        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.resume())
+        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.pause())
         self.motor_thread.signals.finished.connect(lambda: self.signals.finished.emit())
         self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         

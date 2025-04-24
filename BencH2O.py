@@ -312,6 +312,10 @@ class App(QWidget):
         
     def resetGraph(self):
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
+        x = self.data['Time']
+        y = self.data['Weight']
+        self.graph.set_data(x, y)
+
         self.ax.relim()
         self.ax.autoscale_view()
         self.fig.canvas.draw_idle()
