@@ -24,6 +24,9 @@ class GraphThread(QThread):
             # This specifies the interval of time between each data point
             interval = 10 ** -self.precision
             
+            # sleep to account for the delay in scale data collection
+            time.sleep(2)
+            
             # While the thread is running, keep updating the graph with new data
             while self._is_running:
                 
@@ -58,6 +61,8 @@ class GraphThread(QThread):
         self._paused = False
         self._pause_condition.wakeAll()
         self._pause_mutex.unlock()
+        # sleep to account for the delay in scale data collection
+        time.sleep(2)
     
     def reset(self):
         self.time = 0

@@ -39,6 +39,7 @@ class App(QWidget):
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
+        plt.tight_layout(pad=5)
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
         self.graph.set_data(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
@@ -71,13 +72,12 @@ class App(QWidget):
         
         # Device Control Center
         self.control_layout = QHBoxLayout()
-        self.device_control = ControlCenter()
         # Add a tab widget to hold multiple control centers
         self.control_tabs = QTabWidget()
         
         # Add the initial control center tab
-        self.control_tabs.addTab(self.device_control.Container, "1")
         self.control_tabs.setObjectName('tab_bar')
+        self.addControlCenterTab()
         
         # Button to add a new control center
         add_tab_button = QPushButton("Add Control Center", self)
@@ -97,11 +97,11 @@ class App(QWidget):
 
         self.control_layout.addWidget(self.control_tabs)
         
-        # Analysis Center
+        # Analysis Center --------------------------# 
         self.analysis_layout = QVBoxLayout()
         self.analysis_center = AnalysisCenter()
         self.graph_widget = QWidget(self.analysis_center.Container)
-        self.analysis_center.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignRight)
+        self.analysis_center.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignTop)
         self.analysis_layout.addWidget(self.analysis_center.Container)
         self.analysis_center.tareScale.clicked.connect(self.tare)
         
@@ -124,7 +124,7 @@ class App(QWidget):
         button_layout.addWidget(self.execute_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         
-        # Add Layouts to Main Layout
+        # Add Layouts to Main Layout ------------------#
         self.layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)
         self.layout.addLayout(button_layout)
@@ -132,21 +132,7 @@ class App(QWidget):
         self.setLayout(self.layout)
 
         # Connection Signals
-        # UI Elements are updated based on the connection status of the device
-        self.threadpool.motor_thread.signals.start.connect(self.drawExecuteButton)
-        self.threadpool.motor_thread.signals.finished.connect(self.drawExecuteButton)
-        
-        self.threadpool.signals.started.connect(self.resetGraph)
-        self.threadpool.signals.log.connect(lambda t, w: self.updateGraph(t, w))
-        self.threadpool.signals.data.connect(lambda weight: self.analysis_center.weightLabel.setText(weight))
-        self.threadpool.signals.data.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.calculateFlowRate())))
-        self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.averageFlowRate())))
-        
-        self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
-        self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
-        self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
-        
-        self.threadpool.connection_thread.signals.connected.connect(self.connected)
+        self.setConnections()
         self.threadpool.start_connection()
         
         # Testing Area. Commment out contents before use #
@@ -164,7 +150,6 @@ class App(QWidget):
             commands.append(command_set)
             print('Commands:', command_set)
         return commands
-     
     
     def tare(self):
         self.threadpool.weight_thread.tare()
@@ -206,6 +191,10 @@ class App(QWidget):
         help_action = QAction('Manual', self)
         help_menu.addAction(help_action)
         
+        reset_ui_action = QAction('Reset UI', self)
+        reset_ui_action.triggered.connect(self.resetUI)
+        help_menu.addAction(reset_ui_action)
+        
         self.layout.setMenuBar(menubar)
     
     def drawErrorLayout(self):
@@ -239,6 +228,23 @@ class App(QWidget):
                 self.control_tabs.setTabText(i, str(i + 1))
         else:
             QMessageBox.warning(self, "Warning", "Cannot remove the last control center tab.")
+            
+    def setConnections(self):
+         # UI Elements are updated based on the connection status of the device
+        self.threadpool.motor_thread.signals.start.connect(self.drawExecuteButton)
+        self.threadpool.motor_thread.signals.finished.connect(self.drawExecuteButton)
+        
+        self.threadpool.signals.started.connect(self.resetGraph)
+        self.threadpool.signals.log.connect(lambda t, w: self.updateGraph(t, w))
+        self.threadpool.signals.data.connect(lambda weight: self.analysis_center.weightLabel.setText(weight))
+        self.threadpool.signals.data.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.calculateFlowRate())))
+        self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.averageFlowRate())))
+        
+        self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
+        self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
+        self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
+        
+        self.threadpool.connection_thread.signals.connected.connect(self.connected)
     
     # Update Analysis Center based on connection status ----------- #
     def drawAnalysis(self):
@@ -379,6 +385,31 @@ class App(QWidget):
             self.data.to_csv(filepath)
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
+            
+    def resetUI(self):
+        # Reset data and control sets
+        self.data = pd.DataFrame(columns=['Time', 'Weight'])
+        self.control_sets = []
+        self.resetGraph()
+        
+        # Reset device and threadpool
+        try:
+            interface = ConnectionManager().connect()
+        except Exception as e:
+            interface = None
+            print(f'Error: {e}')
+        
+        self.device = Controller(interface)
+        self.threadpool = ThreadPool(self.device)
+        
+        # Reinitialize UI elements
+        self.drawErrorLayout()
+        self.drawExecuteButton()
+        self.drawAnalysis()
+        
+        # Restart thread connections
+        self.setConnections()
+        self.threadpool.start_connection()
 
     #---------------------------------------------------------#
 
@@ -386,10 +417,21 @@ if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
         ex.failsafeToCSV()
+        
+    # Add a key event to toggle fullscreen on F11
+    def toggle_fullscreen(event):
+        if event.key() == Qt.Key.Key_F11:
+            if ex.isFullScreen():
+                ex.showNormal()
+            else:
+                ex.showFullScreen()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)
     ex = App()
     ex.show()
+
+    app.installEventFilter(ex)
+    ex.keyPressEvent = toggle_fullscreen
     sys.exit(app.exec())
     
