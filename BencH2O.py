@@ -15,9 +15,11 @@ from Interface.Style import apply_style
 from Interface.AnalysisCenter import AnalysisCenter
 from Interface.ControlCenter import ControlCenter
 from Interface.CalibrationMenu import CalibrationMenu
+from Interface.NozzleMenu import NozzleMenu
 import csv
 import os
 from PyQt6.QtGui import QIcon
+import time
 
 class App(QWidget):
     def __init__(self):        
@@ -182,9 +184,14 @@ class App(QWidget):
         
         #Tools Menu
         tools_menu = menubar.addMenu('Tools')
+        
         calibrate_action = QAction('Calibrate Rotary Motor', self)
         calibrate_action.triggered.connect(self.openRotaryCalibration)
         tools_menu.addAction(calibrate_action)
+        
+        nozzle_action = QAction('Adjust Nozzle Position', self)
+        nozzle_action.triggered.connect(self.openNozzleMenu)
+        tools_menu.addAction(nozzle_action)
         
         #Help Menu
         help_menu = menubar.addMenu('Help')
@@ -290,6 +297,11 @@ class App(QWidget):
 
         self.rotary_calibration = CalibrationMenu(self)
         self.rotary_calibration.show()
+        
+    # Open Nozzle Menu ----------- #
+    def openNozzleMenu(self):
+        self.nozzle_menu = NozzleMenu(self)
+        self.nozzle_menu.show()
     
     # Execute Commands ----------- #
     def execute(self):
@@ -417,6 +429,10 @@ if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
         ex.failsafeToCSV()
+        ex.device.nozzle.move_to(0)
+        while ex.device.nozzle.position != 0:
+            time.sleep(0.002)
+        ex.device.nozzle.cleanup()
         
     # Add a key event to toggle fullscreen on F11
     def toggle_fullscreen(event):

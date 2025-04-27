@@ -3,6 +3,7 @@ from pytrinamic.connections import ConnectionManager
 from pytrinamic.modules import TMCM3110
 from PyQt6.QtCore import QDeadlineTimer, QObject
 from Controller.Scale import Scale
+from Controller.Nozzle import Nozzle
         
 class Controller(QObject):
     def __init__(self, interface=None):
@@ -17,6 +18,7 @@ class Controller(QObject):
             self.rotary.stop()
         self.scale = Scale()
             #print(f'Error: {e}')
+        self.nozzle = Nozzle()
         self.errors = [None, None, None]
     
         if not interface:
@@ -31,7 +33,6 @@ class Controller(QObject):
         self.rotary = self.module.motors[1]
         self.linear.stop()
         self.rotary.stop()
-    
     
     def set_rotary_home(self, position):
         self.rotary_home = position
@@ -52,3 +53,6 @@ class Controller(QObject):
             
         except Exception as e:
             print(f'Error: {e}')
+    
+    def nozzle_staus(self):
+        return self.nozzle.motor_step_counter
