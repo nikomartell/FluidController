@@ -62,7 +62,6 @@ class Nozzle(QObject):
         
     def rotate(self):
         
-        
         step_check = 0
         for step in range(8):
             for pin in range(0, len(self.motor_pins)):
