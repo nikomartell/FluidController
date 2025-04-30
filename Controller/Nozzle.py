@@ -1,5 +1,8 @@
 from PyQt6.QtCore import QObject
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    pass
 import time
 
 class Nozzle(QObject):

@@ -8,12 +8,7 @@ class AnalysisCenter(QWidget):
         self.Container.setObjectName('AnalysisCenter')
         
         top_layout = QVBoxLayout(self.Container)
-        top_layout.setContentsMargins(50, 50, 50, 50)
-        
-        self.graph_label = QLabel('Graph', self.Container)
-        self.graph_label.setObjectName('title')
-        self.graph_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        top_layout.addWidget(self.graph_label)
+        top_layout.setContentsMargins(30, 0, 10, 10)
         
         self.graph_widget = QWidget(self.Container)
         self.graph_layout = QVBoxLayout(self.graph_widget)

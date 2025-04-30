@@ -11,7 +11,7 @@ class ControlCenter(QWidget):
         self.Container.setObjectName('ControlCenter')
         
         top_layout = QVBoxLayout(self.Container)
-        top_layout.setContentsMargins(50, 10, 50, 10)
+        top_layout.setContentsMargins(30, 10, 30, 10)
         
         device_layout = QHBoxLayout(self.Container)
         device_layout.setContentsMargins(0, 20, 0, 20)
@@ -20,14 +20,14 @@ class ControlCenter(QWidget):
         # Section Titles and creation
         
         self.motion_layout = QVBoxLayout(self.Container)
-        self.motion_layout.setContentsMargins(0, 0, 30, 0)
+        self.motion_layout.setContentsMargins(0, 0, 10, 0)
         motionSettings = QLabel('Motion Settings', self.Container)
         motionSettings.setObjectName('title')
         self.motion_layout.addWidget(motionSettings, alignment=Qt.AlignmentFlag.AlignTop)
         self.motion_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         self.end_case_layout = QVBoxLayout(self.Container)
-        self.end_case_layout.setContentsMargins(0, 0, 30, 0)
+        self.end_case_layout.setContentsMargins(0, 0, 10, 0)
         endCase = QLabel('End Case Settings', self.Container)
         endCase.setObjectName('title')
         self.end_case_layout.addWidget(endCase, alignment=Qt.AlignmentFlag.AlignTop)

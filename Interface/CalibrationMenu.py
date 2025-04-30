@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QMessageBox, QLineEdit, QHBoxLayout
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QDoubleValidator, QIntValidator
 from Controller.Controller import Controller
@@ -30,6 +30,20 @@ class CalibrationMenu(QMainWindow):
             self.position_label = QLabel(str(self.rotary.actual_position), self)
             self.position_label.setObjectName("label")
             self.layout.addWidget(self.position_label)
+            
+            self.input_layout = QHBoxLayout()
+            
+            self.left_button = QPushButton("Left", self)
+            self.left_button.clicked.connect(self.move_left)
+            self.left_button.released.connect(self.rotary.stop)
+            self.input_layout.addWidget(self.left_button)
+            
+            self.right_button = QPushButton("Right", self)
+            self.right_button.clicked.connect(self.move_right)
+            self.right_button.released.connect(self.rotary.stop)
+            self.input_layout.addWidget(self.right_button)
+            
+            self.layout.addLayout(self.input_layout)
             
             # Calibration Button
             self.calibration_button = QPushButton("Set Home", self)
@@ -67,28 +81,29 @@ class CalibrationMenu(QMainWindow):
         if event.key() == Qt.Key.Key_Right:
             self.right_key_pressed = False
             self.rotary.stop()
+            self.position_label.setText(str(self.rotary.actual_position))
         elif event.key() == Qt.Key.Key_Left:
             self.left_key_pressed = False
             self.rotary.stop()
+            self.position_label.setText(str(self.rotary.actual_position))
 
 
     def start_moving_right(self):
         if self.right_key_pressed:
             self.move_right()
             QTimer.singleShot(5, self.start_moving_right)
-            self.position_label.setText(str(self.rotary.actual_position))
     
     def start_moving_left(self):
         if self.left_key_pressed:
             self.move_left()
             QTimer.singleShot(5, self.start_moving_left)
-            self.position_label.setText(str(self.rotary.actual_position))
     
     
     def move_right(self):
         # rotate the motor clockwise
         try:
             self.rotary.rotate(-10)
+            self.position_label.setText(str(self.rotary.actual_position))
         except Exception as e:
             print(f'Error: {e}')
     
@@ -96,6 +111,7 @@ class CalibrationMenu(QMainWindow):
         # rotate the motor counter-clockwise
         try:
             self.rotary.rotate(10)
+            self.position_label.setText(str(self.rotary.actual_position))
         except Exception as e:
             print(f'Error: {e}')
             

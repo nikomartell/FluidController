@@ -30,8 +30,7 @@ def apply_style(parent):
             color: #ffffff;
             border: 2px solid #545860;
             border-radius: 5px;
-            max-width: 500px;
-            height: 30%;
+            max-width: 400px;
             padding: 10px;
             font-size: 20px;
             font-weight: bold;
@@ -63,7 +62,7 @@ def apply_style(parent):
         }
 
         QLabel#weight {
-            font-size: 32px;
+            font-size: 26px;
             font-weight: bold;
         }
         
@@ -72,14 +71,14 @@ def apply_style(parent):
             color: red;
             font-weight: bold;
         }
-
+        
         QLineEdit {
             border: 1px solid #333333;
             border-radius: 5px;
             padding: 5px;
             background-color: #ffffff;
-            height: 50%;
-            width: 150%;
+            height: 30%;
+            width: 100px;
         }
 
         QComboBox {
@@ -87,7 +86,7 @@ def apply_style(parent):
             border: 1px solid #333333;
             padding: 5px;
             max-width: 200px;
-            height: 50%;
+            height: 30%;
             width: 150%;
         }
         

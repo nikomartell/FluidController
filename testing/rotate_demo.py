@@ -21,6 +21,8 @@ with connection_manager.connect() as my_interface:
     motor_2 = module.motors[2]
     
     print(motor_0.drive_settings)
+    print(motor_1.drive_settings)
+    print(motor_2.drive_settings)
     
     print("Motor 0:" , motor_0.get_actual_position())
     

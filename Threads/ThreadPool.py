@@ -5,6 +5,7 @@ from Threads.GraphThread import GraphThread
 from Threads.MotorThread import MotorThread
 from Threads.ConnectionThread import ConnectionThread
 from Threads.WeightThread import WeightThread
+from Threads.PrimeThread import PrimeThread
 from Controller.Controller import Controller
 import time
 
@@ -21,6 +22,11 @@ class ThreadPool(QThreadPool):
         self.graph_thread = GraphThread(self.controller.scale)
         self.weight_thread = WeightThread(self.controller.scale)
         self.connection_thread = ConnectionThread(self.controller)
+        try:
+            self.prime_thread = PrimeThread(self.controller)
+        except Exception as e:
+            print(f'Error: {e}')
+            self.prime_thread = None
         
         
     # Take a Runnable object, move it to a thread, store it in Threads list if not already started
@@ -41,6 +47,14 @@ class ThreadPool(QThreadPool):
         self.connection_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
         self.connection_thread.signals.result.connect(lambda con: self.set_controller(con))
         self.connection_thread.start()
+    
+    def prime(self):
+        # Set signal connections
+        self.prime_thread.signals.start.connect(self.motor_thread.start)
+        self.prime_thread.signals.primed.connect()
+        
+        # Start the sensor thread
+        self.prime_thread.start()
     
     # Start the motor thread
     def start_process(self, command_set):

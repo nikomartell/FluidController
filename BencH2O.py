@@ -41,15 +41,17 @@ class App(QWidget):
         
         # Graph Setup
         self.fig, self.ax = plt.subplots()
-        plt.tight_layout(pad=5)
+        plt.tight_layout(pad=6)
         self.graph, = self.ax.plot(self.data['Time'], self.data['Weight'])
         self.graph.set_data(self.data['Time'], self.data['Weight'])
         self.ax.autoscale(enable=True, axis='both')
         self.ax.set_xlabel('Time (s)')
         self.ax.set_ylabel('Weight (g)')
         self.ax.set_title('Weight vs Time')
+        self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
+        self.setGeometry(0, 0, 1024, 600)
         
         self.initUI()
             
@@ -82,12 +84,12 @@ class App(QWidget):
         self.addControlCenterTab()
         
         # Button to add a new control center
-        add_tab_button = QPushButton("Add Control Center", self)
+        add_tab_button = QPushButton("+", self)
         add_tab_button.setToolTip("Add a new control center tab")
         add_tab_button.clicked.connect(self.addControlCenterTab)
         
         # Button to remove the last control center
-        remove_tab_button = QPushButton("Remove Control Center", self)
+        remove_tab_button = QPushButton("-", self)
         remove_tab_button.setToolTip("Remove the last control center tab")
         remove_tab_button.clicked.connect(self.removeControlCenterTab)
         
@@ -110,9 +112,11 @@ class App(QWidget):
         button_layout = QHBoxLayout()
         
         # Prime button for allowing user to manually prime system
-        prime_button = QPushButton('Prime Tubing')
-        prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
-        button_layout.addWidget(prime_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.prime_button = QPushButton('Prime Tubing')
+        self.prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
+        self.prime_button.clicked.connect(self.threadpool.prime)
+        self.drawPrimeButton()
+        button_layout.addWidget(self.prime_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
         self.statusText = QLabel('Standby')
         self.statusText.setObjectName('title')
@@ -288,6 +292,20 @@ class App(QWidget):
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
+            
+    def drawPrimeButton(self):
+        if self.device.module != None:
+            if self.device.primed is False:
+                self.prime_button.setEnabled(True)
+                self.prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
+                self.prime_button.setText('Prime Tubing')
+            else:
+                self.prime_button.setEnabled(True)
+                self.prime_button.setStyleSheet('background-color: #0B41CD;')
+                self.prime_button.setToolTip('')
+                self.prime_button.setText('Tubing Primed')
+        else:
+            self.prime_button.hide()
     
     # Open Rotary Motor Calibration Window ----------- #
     def openRotaryCalibration(self):
@@ -300,8 +318,12 @@ class App(QWidget):
         
     # Open Nozzle Menu ----------- #
     def openNozzleMenu(self):
-        self.nozzle_menu = NozzleMenu(self)
-        self.nozzle_menu.show()
+        try:
+            self.nozzle_menu = NozzleMenu(self)
+            self.nozzle_menu.show()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Nozzle not found: {e}")
+            return
     
     # Execute Commands ----------- #
     def execute(self):
@@ -429,10 +451,16 @@ if __name__ == '__main__':
     def close_threads():
         ex.threadpool.stop()
         ex.failsafeToCSV()
-        ex.device.nozzle.move_to(0)
-        while ex.device.nozzle.position != 0:
-            time.sleep(0.002)
-        ex.device.nozzle.cleanup()
+        try:
+            if ex.device.nozzle is not None:
+                ex.device.nozzle.move_to(0)
+                while ex.device.nozzle.position != 0:
+                    time.sleep(0.002)
+                ex.device.nozzle.cleanup()
+        except Exception as e:
+            print(f'Error: {e}')
+        
+        
         
     # Add a key event to toggle fullscreen on F11
     def toggle_fullscreen(event):

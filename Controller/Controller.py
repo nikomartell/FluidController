@@ -12,13 +12,20 @@ class Controller(QObject):
         self.module = TMCM3110(interface) if interface else None
         self.rotary = self.module.motors[0] if interface else None
         self.linear = self.module.motors[1] if interface else None
+        self.positioner = self.module.motors[2] if interface else None
         self.rotary_home = 6400
+        self.primed = False
+        
         if interface:
             self.linear.stop()
             self.rotary.stop()
         self.scale = Scale()
             #print(f'Error: {e}')
-        self.nozzle = Nozzle()
+        try:
+            self.nozzle = Nozzle()
+        except Exception as e:
+            print(f'Error: {e}')
+            self.nozzle = None
         self.errors = [None, None, None]
     
         if not interface:
@@ -28,14 +35,31 @@ class Controller(QObject):
             self.errors[2] = 'Scale not found'
     
     def set_motors(self, interface):
-        self.module = TMCM3110(interface)
-        self.linear = self.module.motors[0]
-        self.rotary = self.module.motors[1]
-        self.linear.stop()
-        self.rotary.stop()
+        try:
+            self.module = TMCM3110(interface)
+            self.linear = self.module.motors[0]
+            self.rotary = self.module.motors[1]
+            self.positioner = self.module.motors[2]
+            self.linear.stop()
+            self.rotary.stop()
+            self.positioner.stop()
+        except Exception as e:
+            print(f'Error: {e}')
+            self.linear = None
+            self.rotary = None
+            self.positioner = None
     
     def set_rotary_home(self, position):
         self.rotary_home = position
+    
+    def adjust_position(self):
+        # Adjust the position of the rotary motor to the home position
+        try:
+            if self.rotary:
+                position_adjust = self.rotary.actual_position % self.rotary_home
+                self.rotary.set_actual_position(position_adjust)
+        except Exception as e:
+            print(f'Error: {e}')
     
     def motor_settings(self):
         try:
