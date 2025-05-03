@@ -4,7 +4,7 @@ import matplotlib
 import pandas as pd
 matplotlib.use('QtAgg')
 import numpy as np
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTabWidget, QFileDialog, QMessageBox, QMenuBar
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTabWidget, QFileDialog, QMessageBox, QMenuBar, QLineEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from pytrinamic.connections import ConnectionManager
@@ -16,6 +16,7 @@ from Interface.AnalysisCenter import AnalysisCenter
 from Interface.ControlCenter import ControlCenter
 from Interface.CalibrationMenu import CalibrationMenu
 from Interface.NozzleMenu import NozzleMenu
+from Interface.Keyboard import Keyboard
 import csv
 import os
 from PyQt6.QtGui import QIcon
@@ -51,7 +52,7 @@ class App(QWidget):
         self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
-        self.setGeometry(0, 0, 1024, 600)
+        # self.setGeometry(0, 0, 1024, 600)
         
         self.initUI()
             
@@ -108,6 +109,11 @@ class App(QWidget):
         self.analysis_center.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignTop)
         self.analysis_layout.addWidget(self.analysis_center.Container)
         self.analysis_center.tareScale.clicked.connect(self.tare)
+        self.analysis_center.Container.hide()
+        
+        self.keyboard = Keyboard()
+        self.analysis_layout.addWidget(self.keyboard.keyboard_widget, alignment=Qt.AlignmentFlag.AlignBottom)
+        
         
         button_layout = QHBoxLayout()
         
@@ -121,6 +127,11 @@ class App(QWidget):
         self.statusText = QLabel('Standby')
         self.statusText.setObjectName('title')
         button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignHCenter)
+        
+        export_button = QPushButton('Export Data', self)
+        export_button.setToolTip('Export Data to CSV')
+        export_button.clicked.connect(self.exportDataToCSV)
+        button_layout.addWidget(export_button, alignment=Qt.AlignmentFlag.AlignRight)
         
         self.execute_button = QPushButton('Execute', self)
         self.execute_button.setToolTip('Execute Commands')
@@ -140,10 +151,26 @@ class App(QWidget):
         # Connection Signals
         self.setConnections()
         self.threadpool.start_connection()
+        self.attach_keyboard_events()
         
         # Testing Area. Commment out contents before use #
         # self.graph_thread.start()
+        
+    def attach_keyboard_events(self):
+        if isinstance(self, QWidget):
+            for child in self.findChildren(QWidget):
+                if isinstance(child, QLineEdit):
+                    child.focusInEvent = lambda event: self.show_keyboard()
+                    child.focusOutEvent = lambda event: self.hide_keyboard()
     
+    # On-Screen Keyboard for QLineEdit
+    def show_keyboard(self):
+        self.analysis_center.Container.hide()
+        self.keyboard.keyboard_widget.show()
+
+    def hide_keyboard(self):
+        self.keyboard.keyboard_widget.hide()
+        self.analysis_center.Container.show()
     #---------------------------------------------------------#
     
     # Methods ---------- #
@@ -206,9 +233,17 @@ class App(QWidget):
         reset_ui_action.triggered.connect(self.resetUI)
         help_menu.addAction(reset_ui_action)
         
+        # Add a close button to the menu bar and align it to the far right
+        close_action = QPushButton('Close', self)
+        close_action.clicked.connect(self.close)
+        menubar.setCornerWidget(close_action, Qt.Corner.TopRightCorner)
+        
         self.layout.setMenuBar(menubar)
     
-    def drawErrorLayout(self):
+    def drawErrorLayout(self, error=None):
+        if error == "Scale:":
+            self.device.errors[2] = error
+            
         self.errorLayout = QHBoxLayout()
         self.errorLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         rotary_error = QLabel(self.device.errors[0])
@@ -256,6 +291,9 @@ class App(QWidget):
         self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
         
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
+        
+        self.threadpool.weight_thread.signals.error.connect(lambda e, d: self.drawErrorLayout(d))
+        self.threadpool.prime_thread.signals.start.connect(self.drawPrimeButton)
     
     # Update Analysis Center based on connection status ----------- #
     def drawAnalysis(self):
@@ -299,6 +337,13 @@ class App(QWidget):
                 self.prime_button.setEnabled(True)
                 self.prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
                 self.prime_button.setText('Prime Tubing')
+            elif self.threadpool.prime_thread._is_running == True:
+                self.prime_button.setEnabled(True)
+                self.prime_button.setStyleSheet('background-color: red;')
+                self.prime_button.setToolTip('STOP MOTOR')
+                self.prime_button.setText('STOP MOTOR')
+                self.prime_button.clicked.disconnect()
+                self.prime_button.clicked.connect(self.threadpool.stop)   
             else:
                 self.prime_button.setEnabled(True)
                 self.prime_button.setStyleSheet('background-color: #0B41CD;')
@@ -328,6 +373,7 @@ class App(QWidget):
     # Execute Commands ----------- #
     def execute(self):
         print('Executing commands...')
+        self.analysis_center.Container.show()
         command_set = self.getCommands()
         self.threadpool.start_process(command_set)
     
@@ -407,10 +453,12 @@ class App(QWidget):
            
     # Export data to CSV 
     def exportDataToCSV(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save Data to CSV", "", "CSV Files (*.csv);;All Files (*)")
-        if file_name:
+        file_name = "/media/usb/data.csv"  # Path to the mounted flash drive
+        try:
             self.data.to_csv(file_name)
             QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
     
     # On close, save data to CSV
     def failsafeToCSV(self):
@@ -473,7 +521,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)
     ex = App()
-    ex.show()
+    ex.showFullScreen()
 
     app.installEventFilter(ex)
     ex.keyPressEvent = toggle_fullscreen

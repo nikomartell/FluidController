@@ -29,17 +29,19 @@ class PrimeThread(QThread):
         
     def run(self):
         self._is_running = True
+        self.signals.start.emit()
         if isinstance(self.controller, Controller):
             self.rotary = self.controller.rotary
             
         while self._is_running:
-            self.rotary.move_by(self.controller.rotary_home, velocity=100)
+            self.rotary.move_by(self.controller.rotary_home, velocity=50)
+            print(self.rotary.actual_position)
             if GPIO.input(self.in1) == GPIO.HIGH:
                 self.signals.primed.emit()
                 break
-            time.sleep(0.0001)
+            time.sleep(0.1)
         time.sleep(1)
-        
+        self.rotary.stop()
         self.controller.adjust_position()
             
 class PrimeSignals(QObject):

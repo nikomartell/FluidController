@@ -18,21 +18,24 @@ class WeightThread(QThread):
     def run(self):
         if isinstance(self.scale, Scale):
             print('Weight Thread Running')
-            try:
-                while self._is_running:
+            while self._is_running:
+                try:
                     if self.scale.device:
                         queue = self.scale.device.getQueueStatus()
                         if queue >= 16:
                             self.signals.result.emit(self.scale.get_weight())
                     if not self._is_running:
                         break
-            except Exception as e:
-                print(f'Error: {e}')
-            finally:
-                if self.scale.device:
+                except Exception as e:
+                    self.signals.error.emit((e, 'Scale'))
+            if self.scale.device:
+                try:
                     self.scale.device.purge()  # Clear the input and output buffers
                     self.scale.device.close()  # Close the device
-                self.signals.finished.emit()
+                except Exception as e:
+                    print(f'Error: {e}')
+                    self.signals.error.emit((e, 'WeightThread'))
+            self.signals.finished.emit()
     
     # This is the primary way to tare the scale.
     # Using it directly through the scale can freeze the UI
