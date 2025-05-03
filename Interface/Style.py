@@ -35,6 +35,11 @@ def apply_style(parent):
             font-size: 20px;
             font-weight: bold;
         }
+        
+        QPushButton:pressed {
+            background-color: #0B41CD;
+            color: #ffffff;
+        }
 
         QPushButton#tare {
             max-width: 200px;
@@ -123,11 +128,14 @@ def apply_style(parent):
             color: #ffffff;
             border: 2px solid #545860;
             border-radius: 0px;
+            font-size: 20px;
+            padding: 5px;
         }
 
         QMenuBar::item {
             background-color: #545860;
             color: #ffffff;
+            font-size: 20px;
         }
 
         QMenuBar::item:selected {
@@ -139,6 +147,8 @@ def apply_style(parent):
             background-color: #545860;
             color: #ffffff;
             border: 0px;
+            font-size: 20px;
+            padding: 5px;
         }
 
         QMenu::item:selected {

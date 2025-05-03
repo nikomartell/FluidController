@@ -43,6 +43,10 @@ class MotorThread(QThread):
                         # -----------------------Zeroing-------------------------- #
                         
                         self.zero(command)
+                        while self.rotary.actual_position != 0:
+                            print(self.linear.actual_position)
+                            print(self.rotary.actual_position)
+                        
                             
                         # -----------------------Zeroing Finished-------------------------- #    
                         
@@ -137,9 +141,9 @@ class MotorThread(QThread):
             
             if isinstance(command.position, int):
                 
-                if command.position > 4600:
+                if command.position > 10000:
                     print('linear Position to high; Defaulting to highest position of 4600')
-                    command.position = 4600
+                    command.position = 10000
                     
                 elif command.position < -1600:
                     print('linear position is too low; Defaulting to lowest position of -1600')
@@ -147,12 +151,11 @@ class MotorThread(QThread):
                 
                 self.linear.move_to(command.position)
                 while self.linear.actual_position != command.position:
-                    print(self.linear.actual_position)
+                    time.sleep(0.1)
             
             # If the rotary is not at the default position, move it to the default position
             self.rotary.move_to(0, velocity=100)
             while self.rotary.actual_position != 0:
-                print(self.rotary.actual_position)
                 # If the thread is not running, stop the rotary and break out of the loop
                 if not self._is_running:
                     self.rotary.stop()

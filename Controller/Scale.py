@@ -20,8 +20,8 @@ class Scale:
     def tare(self):
         try:
             self.device.write(b'ST\r\n')
-            time.sleep(2)
             self.device.purge()  # Clear the input and output buffers
+            self.get_weight()  # Read the weight after taring
         except Exception as e:
             print(f'Error: {e}')
     
@@ -29,8 +29,12 @@ class Scale:
     def get_weight(self):
         try:
             if self.device != None:
-                weight = self.device.read(16)
-                return self.parse_weight(weight)
+                queue = self.device.getQueueStatus()
+                if queue >= 16:
+                    weight = self.device.read(16)
+                    return self.parse_weight(weight)
+                else:
+                    return self.text
             elif self.device == None:
                 return 0.00
 
@@ -48,5 +52,6 @@ class Scale:
         unit2 = data[12:13].decode('latin-1').strip()  # 13 - G, b, t, c, or %
 
         self.weight = float(weight)
+        self.text = sign + weight + ' ' + unit1 + unit2
         
-        return sign + weight + ' ' + unit1 + unit2
+        return self.text

@@ -49,8 +49,6 @@ class ThreadPool(QThreadPool):
         self.connection_thread.start()
     
     def prime(self):
-        # Set signal connections
-        
         # Start the sensor thread
         self.prime_thread.start()
     

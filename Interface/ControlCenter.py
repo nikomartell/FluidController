@@ -5,7 +5,7 @@ from Controller.CommandSet import CommandSet
 
 class ControlCenter(QWidget):
     def __init__(self):
-        
+        QLineEdit.focusPolicy = Qt.FocusPolicy.ClickFocus
         
         self.Container = QWidget()
         self.Container.setObjectName('ControlCenter')

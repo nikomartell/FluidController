@@ -33,6 +33,13 @@ class Keyboard(QWidget):
         backspace_button.setFixedSize(40, 40)
         backspace_button.clicked.connect(self.backspace)
         keyboard_layout.addWidget(backspace_button)
+        
+        # Add a negative button
+        negative_button = QPushButton("±")
+        negative_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        negative_button.setFixedSize(40, 40)
+        negative_button.clicked.connect(self.toggle_negative)
+        keyboard_layout.addWidget(negative_button)
 
         self.keyboard_widget.setLayout(keyboard_layout)
 
@@ -45,3 +52,12 @@ class Keyboard(QWidget):
         focused_widget = QApplication.focusWidget()
         if isinstance(focused_widget, QLineEdit):
             focused_widget.backspace()
+            
+    def toggle_negative(self):
+        focused_widget = QApplication.focusWidget()
+        if isinstance(focused_widget, QLineEdit):
+            text = focused_widget.text()
+            if text.startswith('-'):
+                focused_widget.setText(text[1:])
+            else:
+                focused_widget.setText('-' + text)

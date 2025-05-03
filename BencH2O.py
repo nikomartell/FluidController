@@ -109,10 +109,10 @@ class App(QWidget):
         self.analysis_center.graph_layout.addWidget(self.fig.canvas, alignment=Qt.AlignmentFlag.AlignTop)
         self.analysis_layout.addWidget(self.analysis_center.Container)
         self.analysis_center.tareScale.clicked.connect(self.tare)
-        self.analysis_center.Container.hide()
         
         self.keyboard = Keyboard()
         self.analysis_layout.addWidget(self.keyboard.keyboard_widget, alignment=Qt.AlignmentFlag.AlignBottom)
+        self.keyboard.keyboard_widget.hide()
         
         
         button_layout = QHBoxLayout()
@@ -263,6 +263,7 @@ class App(QWidget):
         self.control_sets.append(new_control_center)
         if commands is not None:
             new_control_center.set_commands(commands)
+        self.attach_keyboard_events()
             
     def removeControlCenterTab(self):
         # Remove the current control center tab
@@ -274,7 +275,9 @@ class App(QWidget):
                 self.control_tabs.setTabText(i, str(i + 1))
         else:
             QMessageBox.warning(self, "Warning", "Cannot remove the last control center tab.")
-            
+        
+    # Set up connections for the threads ----------- #
+    
     def setConnections(self):
          # UI Elements are updated based on the connection status of the device
         self.threadpool.motor_thread.signals.start.connect(self.drawExecuteButton)
@@ -424,6 +427,12 @@ class App(QWidget):
                 return round(total_weight / total_time, 3)
         return 0.00
     
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            focused_widget = self.focusWidget()
+            if isinstance(focused_widget, QLineEdit):
+                focused_widget.clearFocus()
+    
     #---------------------------------------------------------#
     
     # File Menu Actions
@@ -492,6 +501,13 @@ class App(QWidget):
         # Restart thread connections
         self.setConnections()
         self.threadpool.start_connection()
+        
+        # Add a key event to toggle fullscreen on F11
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
 
     #---------------------------------------------------------#
 
@@ -507,23 +523,13 @@ if __name__ == '__main__':
                 ex.device.nozzle.cleanup()
         except Exception as e:
             print(f'Error: {e}')
-        
-        
-        
-    # Add a key event to toggle fullscreen on F11
-    def toggle_fullscreen(event):
-        if event.key() == Qt.Key.Key_F11:
-            if ex.isFullScreen():
-                ex.showNormal()
-            else:
-                ex.showFullScreen()
     
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)
     ex = App()
     ex.showFullScreen()
+    ex.installEventFilter(ex)
+    ex.mousePressEvent = ex.mousePressEvent
 
-    app.installEventFilter(ex)
-    ex.keyPressEvent = toggle_fullscreen
     sys.exit(app.exec())
     

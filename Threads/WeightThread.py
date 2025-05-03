@@ -27,7 +27,7 @@ class WeightThread(QThread):
                     if not self._is_running:
                         break
                 except Exception as e:
-                    self.signals.error.emit((e, 'Scale'))
+                    print(f'Error: {e}')
             if self.scale.device:
                 try:
                     self.scale.device.purge()  # Clear the input and output buffers
@@ -41,8 +41,9 @@ class WeightThread(QThread):
     # Using it directly through the scale can freeze the UI
     def tare(self):
         try:
+            if isinstance(self.scale, Scale):
+                self.scale.tare()
             self.scale.tare()
-            time.sleep(1)
         except Exception as e:
             QMessageBox.critical(None, 'Error', {e})
                 
