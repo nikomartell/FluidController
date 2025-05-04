@@ -34,9 +34,9 @@ class PrimeThread(QThread):
             self.rotary = self.controller.rotary
             
         while self._is_running:
-            self.rotary.move_by(self.controller.rotary_home, velocity=50)
+            self.rotary.move_by(self.controller.rotary_home, velocity=500)
             print(self.rotary.actual_position)
-            if GPIO.input(self.in1) == GPIO.HIGH:
+            if GPIO.input(self.in1) == GPIO.LOW:
                 self.signals.primed.emit()
                 break
             time.sleep(0.1)
