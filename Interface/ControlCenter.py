@@ -87,7 +87,7 @@ class ControlCenter(QWidget):
         # Flow Rate
         speedLabel = QLabel('Speed (RPM):', self.Container)
         self.speed = QLineEdit()
-        self.speed.setPlaceholderText('Default: 500')
+        self.speed.setPlaceholderText('0 - 1500')
         self.speed.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         speedLayout = QVBoxLayout()
@@ -99,7 +99,7 @@ class ControlCenter(QWidget):
         # Acceleration
         accelerationLabel = QLabel('Acceleration (Ml/sec^2):', self.Container)
         self.acceleration = QLineEdit()
-        self.acceleration.setPlaceholderText('Default: 10')
+        self.acceleration.setPlaceholderText('0 - 2000')
         self.acceleration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
         
         accelerationLayout = QVBoxLayout()
@@ -109,7 +109,6 @@ class ControlCenter(QWidget):
         
         # Flow Direction
         flowDirectionLabel = QLabel('Flow Direction:', self.Container)
-        
         self.flow_direction = QPushButton('Dispense', self.Container)
         self.flow_direction.setCheckable(True)
         self.flow_direction.clicked.connect(lambda: self.toggle_flow_direction())
@@ -145,7 +144,7 @@ class ControlCenter(QWidget):
         self.end_case_layout.addLayout(durationLayout)
         
         # Strokes
-        strokesLabel = QLabel('Strokes(Rotations):', self.Container)
+        strokesLabel = QLabel('Strokes (Rotations):', self.Container)
         self.strokes = QLineEdit()
         self.strokes.setPlaceholderText('Default: 0')
         self.strokes.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
