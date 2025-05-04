@@ -123,22 +123,23 @@ def apply_style(parent):
             padding: 5px;
         }
 
-        QMenuBar {
+        QWidget#menubar {
             background-color: #545860;
             color: #ffffff;
             border: 2px solid #545860;
             border-radius: 0px;
             font-size: 20px;
-            padding: 5px;
+            margin: 0px;
         }
 
-        QMenuBar::item {
+        QWidget#menubar::item {
             background-color: #545860;
             color: #ffffff;
             font-size: 20px;
+            padding: 5px;
         }
 
-        QMenuBar::item:selected {
+        QWidget#menubar::item:selected {
             background-color: #0B41CD;
             color: #ffffff;
         }
@@ -148,6 +149,10 @@ def apply_style(parent):
             color: #ffffff;
             border: 0px;
             font-size: 20px;
+            padding: 5px;
+        }
+        
+        QMenu::item {
             padding: 5px;
         }
 

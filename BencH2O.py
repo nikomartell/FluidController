@@ -1,3 +1,4 @@
+from datetime import datetime
 import sys
 from matplotlib import pyplot as plt
 import matplotlib
@@ -65,15 +66,18 @@ class App(QWidget):
         # Setup
         self.setWindowTitle('BencH2O Fluidics Delivery')
         self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         
-        self.drawErrorLayout()
-        self.layout.addLayout(self.errorLayout)
-        
-        #---------------------------------------------------------#
-
         self.makeMenuBar()
         
+        self.drawErrorLayout()
+        
+        
         #---------------------------------------------------------#
+        app_layout = QVBoxLayout()
+        app_layout.setContentsMargins(10, 10, 10, 10)
+        
+        app_layout.addLayout(self.errorLayout)
         
         # Device Control Center
         self.control_layout = QHBoxLayout()
@@ -142,9 +146,11 @@ class App(QWidget):
         
         
         # Add Layouts to Main Layout ------------------#
-        self.layout.addLayout(self.control_layout)
+        app_layout.addLayout(self.control_layout)
         self.control_layout.addLayout(self.analysis_layout)
-        self.layout.addLayout(button_layout)
+        app_layout.addLayout(button_layout)
+        
+        self.layout.addLayout(app_layout)
         
         self.setLayout(self.layout)
 
@@ -191,54 +197,48 @@ class App(QWidget):
     
     def makeMenuBar(self):
         # Window Action Items
-        menubar = QMenuBar(self)
+        menu_bar = QWidget()
+        menu_bar.setObjectName('menubar')
+        
+        menubar = QHBoxLayout(menu_bar)
         
         #File Menu
-        file_menu = menubar.addMenu('File')
-        export_action = QAction('Save Config', self)
-        export_action.triggered.connect(self.storeCommandsToCSV)
-        import_action = QAction('Import Config', self)
-        import_action.triggered.connect(self.importCommandsFromCSV)
-        export_data_action = QAction('Export Data', self)
-        export_data_action.triggered.connect(self.exportDataToCSV)
-        file_menu.addAction(export_action)
-        file_menu.addAction(import_action)
-        file_menu.addAction(export_data_action)
+        export_action = QPushButton('Save Config', self)
+        export_action.clicked.connect(self.storeCommandsToCSV)
         
+        import_action = QPushButton('Import Config', self)
+        import_action.clicked.connect(self.importCommandsFromCSV)
         
-        #Settings Menu
-        settings_menu = menubar.addMenu('Settings')
-        motor_settings_action = QAction('Change Motor Settings', self)
-        scale_settings_action = QAction('Change Scale Settings', self)
-        settings_menu.addAction(motor_settings_action)
-        settings_menu.addAction(scale_settings_action)
+        export_data_action = QPushButton('Export Data', self)
+        export_data_action.clicked.connect(self.exportDataToCSV)
         
-        #Tools Menu
-        tools_menu = menubar.addMenu('Tools')
+        menubar.addWidget(export_action)
+        menubar.addWidget(import_action)
+        menubar.addWidget(export_data_action)
         
-        calibrate_action = QAction('Calibrate Rotary Motor', self)
-        calibrate_action.triggered.connect(self.openRotaryCalibration)
-        tools_menu.addAction(calibrate_action)
+        #Tools Menu        
+        calibrate_action = QPushButton('Calibrate Rotary Motor', self)
+        calibrate_action.clicked.connect(self.openRotaryCalibration)
+        menubar.addWidget(calibrate_action)
         
-        nozzle_action = QAction('Adjust Nozzle Position', self)
-        nozzle_action.triggered.connect(self.openNozzleMenu)
-        tools_menu.addAction(nozzle_action)
+        nozzle_action = QPushButton('Adjust Nozzle Position', self)
+        nozzle_action.clicked.connect(self.openNozzleMenu)
+        menubar.addWidget(nozzle_action)
         
         #Help Menu
-        help_menu = menubar.addMenu('Help')
-        help_action = QAction('Manual', self)
-        help_menu.addAction(help_action)
+        help_action = QPushButton('Manual', self)
+        menubar.addWidget(help_action)
         
-        reset_ui_action = QAction('Reset UI', self)
-        reset_ui_action.triggered.connect(self.resetUI)
-        help_menu.addAction(reset_ui_action)
+        reset_ui_action = QPushButton('Reset UI', self)
+        reset_ui_action.clicked.connect(self.resetUI)
+        menubar.addWidget(reset_ui_action)
         
         # Add a close button to the menu bar and align it to the far right
         close_action = QPushButton('Close', self)
         close_action.clicked.connect(self.close)
-        menubar.setCornerWidget(close_action, Qt.Corner.TopRightCorner)
-        
-        self.layout.setMenuBar(menubar)
+        menubar.addWidget(close_action, alignment=Qt.AlignmentFlag.AlignRight)
+                
+        self.layout.addWidget(menu_bar, alignment=Qt.AlignmentFlag.AlignTop)
     
     def drawErrorLayout(self, error=None):
         if error == "Scale:":
@@ -296,7 +296,8 @@ class App(QWidget):
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         
         self.threadpool.weight_thread.signals.error.connect(lambda e, d: self.drawErrorLayout(d))
-        self.threadpool.prime_thread.signals.start.connect(self.drawPrimeButton)
+        if self.threadpool.prime_thread != None:
+            self.threadpool.prime_thread.signals.start.connect(self.drawPrimeButton)
     
     # Update Analysis Center based on connection status ----------- #
     def drawAnalysis(self):
@@ -462,12 +463,13 @@ class App(QWidget):
            
     # Export data to CSV 
     def exportDataToCSV(self):
-        file_name = "/media/usb/data.csv"  # Path to the mounted flash drive
-        try:
-            self.data.to_csv(file_name)
-            QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
-        except Exception as e:
-            QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
+        file_name, _ = QFileDialog.getSaveFileName(self, "Export Data to CSV", datetime.now().strftime("data_%Y-%m-%d_%H-%M-%S.csv"), "CSV Files (*.csv);;All Files (*)")
+        if file_name:
+            try:
+                self.data.to_csv(file_name)
+                QMessageBox.information(self, 'Success', f'Data saved to {file_name}')
+            except Exception as e:
+                QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
     
     # On close, save data to CSV
     def failsafeToCSV(self):
@@ -529,7 +531,7 @@ if __name__ == '__main__':
     ex = App()
     ex.showFullScreen()
     ex.installEventFilter(ex)
-    ex.mousePressEvent = ex.mousePressEvent
+    ex.mousePressEvent
 
     sys.exit(app.exec())
     
