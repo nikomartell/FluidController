@@ -98,13 +98,13 @@ class MotorThread(QThread):
                 self._is_running = False
                 print('Motor Thread Finished')
                 print('Motor Position:', self.rotary.get_actual_position())
-                self.signals.finished.emit()
+                self.signals.complete.emit()
             
             # If forced off, emit the stopped signal
             else:
                 print('Motor Thread Stopped')
                 print('Motor Position:', self.rotary.get_actual_position())
-                self.signals.finished.emit()
+                self.signals.complete.emit()
 
     
     
@@ -166,7 +166,7 @@ class MotorThread(QThread):
 class MotorSignal(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
+    complete = pyqtSignal()
     toZero = pyqtSignal()
     execute = pyqtSignal()
     start = pyqtSignal()

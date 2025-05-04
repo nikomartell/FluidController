@@ -292,17 +292,17 @@ class App(QWidget):
     # Set up connections for the threads ----------- #
     
     def setConnections(self):
-         # UI Elements are updated based on the connection status of the device
+        # UI Elements are updated based on the connection status of the device
         self.threadpool.motor_thread.signals.start.connect(self.drawExecuteButton)
-        self.threadpool.motor_thread.signals.finished.connect(self.drawExecuteButton)
+        self.threadpool.motor_thread.signals.complete.connect(self.drawExecuteButton)
         
         self.threadpool.signals.started.connect(self.resetGraph)
         self.threadpool.signals.log.connect(lambda t, w: self.updateGraph(t, w))
         self.threadpool.signals.data.connect(lambda weight: self.analysis_center.weightLabel.setText(weight))
         self.threadpool.signals.data.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.calculateFlowRate())))
         self.threadpool.graph_thread.signals.finished.connect(lambda: self.analysis_center.flowRateLabel.setText(str(self.averageFlowRate())))
-        
-        self.threadpool.motor_thread.signals.finished.connect(lambda: self.statusText.setText('Standby'))
+         
+        self.threadpool.motor_thread.signals.complete.connect(lambda: self.statusText.setText('Standby'))
         self.threadpool.motor_thread.signals.toZero.connect(lambda: self.statusText.setText('Moving Motor to Zero'))
         self.threadpool.motor_thread.signals.execute.connect(lambda: self.statusText.setText('Executing Commands'))
         
