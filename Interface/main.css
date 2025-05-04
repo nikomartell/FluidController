@@ -11,7 +11,7 @@ QWidget#ControlCenter {
     color: black;
     font-family: 'Open Sans', sans-serif;
     font-size: 14px;
-    border: 2px solid #0B41CD;
+    border: 2px solid #545860;
     border-radius: 5px;
 }
 
@@ -29,6 +29,12 @@ QPushButton {
     border-radius: 5px;
     max-width: 500px;
     padding: 10px;
+    border-image: linear-gradient(
+        to bottom,
+        #545860,
+        #545860
+    ) 1 100%;
+    border-radius: 2px;
 }
 
 QPushButton#tare {

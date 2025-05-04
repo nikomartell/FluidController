@@ -7,7 +7,7 @@ matplotlib.use('QtAgg')
 import numpy as np
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTabWidget, QFileDialog, QMessageBox, QMenuBar, QLineEdit
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QPixmap
 from pytrinamic.connections import ConnectionManager
 from Controller.Controller import Controller
 from Controller.CommandSet import CommandSet
@@ -53,7 +53,8 @@ class App(QWidget):
         self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
-        # self.setGeometry(0, 0, 1024, 600)
+        self.setGeometry(0, 0, 1024, 600)
+        #self.showFullScreen()
         
         self.initUI()
             
@@ -86,21 +87,39 @@ class App(QWidget):
         
         # Add the initial control center tab
         self.control_tabs.setObjectName('tab_bar')
-        self.addControlCenterTab()
         
         # Button to add a new control center
         add_tab_button = QPushButton("+", self)
         add_tab_button.setToolTip("Add a new control center tab")
+        add_tab_button.setObjectName("small")
         add_tab_button.clicked.connect(self.addControlCenterTab)
         
         # Button to remove the last control center
         remove_tab_button = QPushButton("-", self)
-        remove_tab_button.setToolTip("Remove the last control center tab")
+        remove_tab_button.setToolTip("Remove the control center tab")
+        remove_tab_button.setObjectName("small")
         remove_tab_button.clicked.connect(self.removeControlCenterTab)
+        
+        #File Menu
+        export_action = QPushButton('', self)
+        export_action.clicked.connect(self.storeCommandsToCSV)
+        export_action.setObjectName('small')
+        export_path = QPixmap("Interface/export.svg")
+        export_icon = QIcon(export_path)
+        export_action.setIcon(export_icon)
+        
+        import_action = QPushButton('', self)
+        import_action.clicked.connect(self.importCommandsFromCSV)
+        import_action.setObjectName('small')
+        import_path = QPixmap("Interface/import.svg")
+        import_icon = QIcon(import_path)
+        import_action.setIcon(import_icon)
         
         control_buttons = QVBoxLayout()
         control_buttons.addWidget(add_tab_button)
         control_buttons.addWidget(remove_tab_button)
+        control_buttons.addWidget(export_action)
+        control_buttons.addWidget(import_action)
         control_buttons.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.control_layout.addLayout(control_buttons)
 
@@ -199,43 +218,36 @@ class App(QWidget):
         # Window Action Items
         menu_bar = QWidget()
         menu_bar.setObjectName('menubar')
-        
         menubar = QHBoxLayout(menu_bar)
+        menubar.setContentsMargins(5,0,5,0)
         
-        #File Menu
-        export_action = QPushButton('Save Config', self)
-        export_action.clicked.connect(self.storeCommandsToCSV)
         
-        import_action = QPushButton('Import Config', self)
-        import_action.clicked.connect(self.importCommandsFromCSV)
-        
-        export_data_action = QPushButton('Export Data', self)
-        export_data_action.clicked.connect(self.exportDataToCSV)
-        
-        menubar.addWidget(export_action)
-        menubar.addWidget(import_action)
-        menubar.addWidget(export_data_action)
         
         #Tools Menu        
-        calibrate_action = QPushButton('Calibrate Rotary Motor', self)
+        calibrate_action = QPushButton('Calibrate Rotary', self)
         calibrate_action.clicked.connect(self.openRotaryCalibration)
+        calibrate_action.setObjectName('barbutton')
         menubar.addWidget(calibrate_action)
         
-        nozzle_action = QPushButton('Adjust Nozzle Position', self)
+        nozzle_action = QPushButton('Adjust Nozzle', self)
         nozzle_action.clicked.connect(self.openNozzleMenu)
+        nozzle_action.setObjectName('barbutton')
         menubar.addWidget(nozzle_action)
         
         #Help Menu
-        help_action = QPushButton('Manual', self)
-        menubar.addWidget(help_action)
+        manual_action = QPushButton('Manual', self)
+        manual_action.setObjectName('barbutton')
+        menubar.addWidget(manual_action)
         
-        reset_ui_action = QPushButton('Reset UI', self)
-        reset_ui_action.clicked.connect(self.resetUI)
-        menubar.addWidget(reset_ui_action)
+        reset_action = QPushButton('Reset', self)
+        reset_action.setObjectName('barbutton')
+        reset_action.clicked.connect(self.resetUI)
+        menubar.addWidget(reset_action)
         
         # Add a close button to the menu bar and align it to the far right
         close_action = QPushButton('Close', self)
         close_action.clicked.connect(self.close)
+        close_action.setObjectName('barbutton')
         menubar.addWidget(close_action, alignment=Qt.AlignmentFlag.AlignRight)
                 
         self.layout.addWidget(menu_bar, alignment=Qt.AlignmentFlag.AlignTop)
@@ -259,22 +271,23 @@ class App(QWidget):
     def addControlCenterTab(self, commands=None):
         # Create a new control center and add it as a new tab
         new_control_center = ControlCenter()
-        self.control_tabs.addTab(new_control_center.Container, f"{self.control_tabs.count() + 1}")
+        self.control_tabs.addTab(new_control_center.Container, f"Task {self.control_tabs.count() + 1}")
         self.control_sets.append(new_control_center)
         if commands is not None:
             new_control_center.set_commands(commands)
         self.attach_keyboard_events()
+        self.control_tabs.setCurrentWidget(new_control_center.Container)
             
     def removeControlCenterTab(self):
         # Remove the current control center tab
-        if self.control_tabs.count() > 1:
+        if self.control_tabs.count() > 0:
             self.control_tabs.removeTab(self.control_tabs.currentIndex())
             # Remove the corresponding control center from the list
             self.control_sets.pop()
             for i in range(self.control_tabs.count()):
-                self.control_tabs.setTabText(i, str(i + 1))
+                self.control_tabs.setTabText(i, f"Task {i + 1}")
         else:
-            QMessageBox.warning(self, "Warning", "Cannot remove the last control center tab.")
+            QMessageBox.warning(self, "Warning", "No staged commands to remove.")
         
     # Set up connections for the threads ----------- #
     
@@ -296,8 +309,9 @@ class App(QWidget):
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         
         self.threadpool.weight_thread.signals.error.connect(lambda e, d: self.drawErrorLayout(d))
-        if self.threadpool.prime_thread != None:
-            self.threadpool.prime_thread.signals.start.connect(self.drawPrimeButton)
+        self.threadpool.prime_thread.signals.start.connect(lambda: self.drawPrimeButton())
+        self.threadpool.prime_thread.signals.start.connect(lambda: self.statusText.setText('Priming'))
+        self.threadpool.prime_thread.signals.primed.connect(lambda: self.statusText.setText('Primed'))
     
     # Update Analysis Center based on connection status ----------- #
     def drawAnalysis(self):
@@ -351,7 +365,7 @@ class App(QWidget):
             else:
                 self.prime_button.setEnabled(True)
                 self.prime_button.setStyleSheet('background-color: #0B41CD;')
-                self.prime_button.setToolTip('')
+                self.prime_button.setToolTip('Click to adjust primed fluid')
                 self.prime_button.setText('Tubing Primed')
         else:
             self.prime_button.hide()
@@ -440,7 +454,7 @@ class App(QWidget):
     
     # Export commands to CSV
     def storeCommandsToCSV(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", "datasheet", "CSV Files (*.csv);;All Files (*)")
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save Commands to CSV", datetime.now().strftime("execution_%Y-%m-%d_%H-%M-%S.csv"), "CSV Files (*.csv);;All Files (*)")
         if file_name:
             with open(file_name, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
@@ -456,9 +470,15 @@ class App(QWidget):
         if file_name:
             with open(file_name, 'r') as csvfile:
                 command_reader = csv.reader(csvfile)
-                command = [row[1] for row in command_reader if row]
-                inp = CommandSet().set(set = command)
-                self.addControlCenterTab(commands=inp)
+                for row in command_reader:
+                    # Skip the first row in the import. Just has labels.
+                    if row[0] == "Speed":
+                        continue
+                    if row:
+                        command = row
+                        inp = CommandSet()
+                        inp.importSet(set=command)
+                        self.addControlCenterTab(commands=inp)
             QMessageBox.information(self, 'Success', f'Commands imported from {file_name}')
            
     # Export data to CSV 
@@ -479,7 +499,7 @@ class App(QWidget):
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
             
-    def resetUI(self):
+    async def resetUI(self):
         # Reset data and control sets
         self.data = pd.DataFrame(columns=['Time', 'Weight'])
         self.control_sets = []
@@ -503,6 +523,19 @@ class App(QWidget):
         # Restart thread connections
         self.setConnections()
         self.threadpool.start_connection()
+        
+        while self.layout.count() > 0:
+            item = self.layout.itemAt(0)
+            widget = item.widget()
+            if widget is not None:
+                self.layout.removeWidget(widget)
+                widget.deleteLater()
+            else:
+                self.layout.removeItem(item)
+        
+        await self.layout.deleteLater()
+        
+        self.initUI
         
         # Add a key event to toggle fullscreen on F11
     def toggle_fullscreen(self):
@@ -529,9 +562,10 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(close_threads)
     ex = App()
-    ex.showFullScreen()
     ex.installEventFilter(ex)
     ex.mousePressEvent
+    
+    ex.show()
 
     sys.exit(app.exec())
     

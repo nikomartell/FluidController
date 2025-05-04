@@ -22,11 +22,7 @@ class ThreadPool(QThreadPool):
         self.graph_thread = GraphThread(self.controller.scale)
         self.weight_thread = WeightThread(self.controller.scale)
         self.connection_thread = ConnectionThread(self.controller)
-        try:
-            self.prime_thread = PrimeThread(self.controller)
-        except Exception as e:
-            print(f'Error: {e}')
-            self.prime_thread = None
+        self.prime_thread = PrimeThread(self.controller)
         
         
     # Take a Runnable object, move it to a thread, store it in Threads list if not already started

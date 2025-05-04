@@ -10,15 +10,16 @@ import time
 class PrimeThread(QThread):
     def __init__(self, controller):
         super().__init__()
-        # setting up
-        self.in1 = 5
+        # This mainly crashes when attempting to use GPIO off the Raspberry Pi
+        # So this allows the user to test it off the Pi
+        try:
+            self.in1 = 5
+            GPIO.setwarnings(False)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.in1, GPIO.IN)
+        except Exception as e:
+            print("Unable to initialize Priming Funtion", e)
         self.signals = PrimeSignals()
-        
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.in1, GPIO.IN)
-        
-        super().__init__()
         self._is_running = False
         self.controller = controller
         self._is_running = False
@@ -40,7 +41,7 @@ class PrimeThread(QThread):
                 self.signals.primed.emit()
                 break
             time.sleep(0.1)
-        time.sleep(1)
+        time.sleep(0.5)
         self.rotary.stop()
         self.controller.adjust_position()
             

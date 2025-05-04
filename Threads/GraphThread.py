@@ -58,8 +58,6 @@ class GraphThread(QThread):
         self._paused = False
         self._pause_condition.wakeAll()
         self._pause_mutex.unlock()
-        # sleep to account for the delay in scale data collection
-        time.sleep(2)
     
     def reset(self):
         self.time = 0

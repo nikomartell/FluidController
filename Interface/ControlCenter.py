@@ -61,7 +61,7 @@ class ControlCenter(QWidget):
         speed = self.speed.text()
         strokes = self.strokes.text()
         acceleration = self.acceleration.text()
-        flow_direction = self.flow_direction.currentText()
+        flow_direction = self.flow_direction.text()
         duration = self.duration.text()
         iterations = self.iterations.text()
         position = self.linear_position.text()
@@ -76,10 +76,11 @@ class ControlCenter(QWidget):
             self.speed.setText(command.speed)
             self.strokes.setText(command.strokes)
             self.acceleration.setText(command.acceleration)
-            self.flow_direction.setCurrentText(command.flow_direction)
+            self.flow_direction.setText(command.flow_direction)
             self.duration.setText(command.duration)
             self.iterations.setText(command.iterations)
             self.linear_position.setText(command.position)
+            
     
     def set_motion_layout(self):
         
@@ -108,8 +109,10 @@ class ControlCenter(QWidget):
         
         # Flow Direction
         flowDirectionLabel = QLabel('Flow Direction:', self.Container)
-        self.flow_direction = QComboBox()
-        self.flow_direction.addItems(['Dispense', 'Aspirate'])
+        
+        self.flow_direction = QPushButton('Dispense', self.Container)
+        self.flow_direction.setCheckable(True)
+        self.flow_direction.clicked.connect(lambda: self.toggle_flow_direction())
 
         flowDirectionLayout = QVBoxLayout()
         flowDirectionLayout.addWidget(flowDirectionLabel, alignment=Qt.AlignmentFlag.AlignTop)
@@ -119,7 +122,7 @@ class ControlCenter(QWidget):
         # linear Position
         linearPositionLabel = QLabel('Linear Position:', self.Container)
         self.linear_position = QLineEdit()
-        self.linear_position.setPlaceholderText('Default: Current')
+        self.linear_position.setPlaceholderText('-1600 - 10000')
         self.linear_position.setValidator(QDoubleValidator(-1600, 100.0, 0)) # Allow only integers
         
         linearPositionLayout = QVBoxLayout()
@@ -162,3 +165,9 @@ class ControlCenter(QWidget):
         iterationsLayout.addWidget(iterationsLabel, alignment=Qt.AlignmentFlag.AlignTop)
         iterationsLayout.addWidget(self.iterations, alignment=Qt.AlignmentFlag.AlignTop)
         self.end_case_layout.addLayout(iterationsLayout) 
+        
+    def toggle_flow_direction(self):
+        if self.flow_direction.isChecked():
+            self.flow_direction.setText('Aspirate')
+        else:
+            self.flow_direction.setText('Dispense')
