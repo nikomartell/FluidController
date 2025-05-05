@@ -139,13 +139,17 @@ class App(QWidget):
         button_layout = QHBoxLayout()
         
         # Prime button for allowing user to manually prime system
-        self.prime_button = QPushButton('Prime Tubing')
+        self.prime_button = QPushButton('Prime Tubing', self)
         self.prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
         self.prime_button.clicked.connect(self.threadpool.prime)
         self.drawPrimeButton()
         button_layout.addWidget(self.prime_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
-        self.statusText = QLabel('Standby')
+        self.flush_button = QPushButton('Flush', self)
+        self.flush_button.clicked.connect(self.threadpool.flush)
+        button_layout.addWidget(self.flush_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        
+        self.statusText = QLabel('Standby', self)
         self.statusText.setObjectName('title')
         button_layout.addWidget(self.statusText, alignment=Qt.AlignmentFlag.AlignHCenter)
         
@@ -329,6 +333,8 @@ class App(QWidget):
             self.execute_button.setStyleSheet('background-color: red;')
             self.execute_button.setToolTip('Controller not found')
             self.execute_button.setText('Controller not found')
+            
+            self.flush_button.hide()
         
         # If the motor is running, disable the execute button
         elif self.threadpool.motor_thread._is_running == True:
@@ -337,7 +343,10 @@ class App(QWidget):
             self.execute_button.setToolTip('STOP MOTOR')
             self.execute_button.setText('STOP MOTOR')
             self.execute_button.clicked.disconnect()
-            self.execute_button.clicked.connect(self.threadpool.stop)    
+            self.execute_button.clicked.connect(self.threadpool.stop)
+            
+            self.flush_button.setEnabled(False) 
+            self.prime_button.setEnabled(False)
         
         # If the motor is not running, enable the execute button
         elif (self.device.module is not None) and (self.threadpool.motor_thread._is_running == False):
@@ -347,6 +356,9 @@ class App(QWidget):
             self.execute_button.setText('Execute')
             self.execute_button.clicked.disconnect()
             self.execute_button.clicked.connect(self.execute)
+            
+            self.flush_button.setEnabled(True)
+            self.prime_button.setEnabled(True)
             
     def drawPrimeButton(self):
         if self.device.module != None:

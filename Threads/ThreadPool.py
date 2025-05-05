@@ -50,8 +50,9 @@ class ThreadPool(QThreadPool):
         self.prime_thread.start()
         
     def flush(self):
-        command = CommandSet(speed=1000, duration=20, flow_direction="Aspirate")
+        command = CommandSet(speed=1000, duration=20, flow_direction="Aspirate", position=22000)
         self.motor_thread.command_set = command
+        self.motor_thread.start()
     
     # Start the motor thread
     def start_process(self, command_set):
