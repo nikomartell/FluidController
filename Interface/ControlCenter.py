@@ -8,7 +8,6 @@ class ControlCenter(QWidget):
         QLineEdit.focusPolicy = Qt.FocusPolicy.ClickFocus
         
         self.Container = QWidget()
-        self.Container.setFixedSize(500, 500)  # Set static size for the container
         self.Container.setObjectName('ControlCenter')
         
         top_layout = QVBoxLayout(self.Container)

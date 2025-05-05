@@ -54,8 +54,8 @@ class App(QWidget):
         self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
-        self.setGeometry(0, 0, 1024, 600)
-        #self.showFullScreen()
+        #self.setGeometry(0, 0, 1024, 600)
+        self.showFullScreen()
         self.setCursor(Qt.CursorShape.BlankCursor)
         
         self.initUI() 
@@ -142,6 +142,7 @@ class App(QWidget):
         self.prime_button = QPushButton('Prime Tubing', self)
         self.prime_button.setToolTip('Run rotary motor until fluid reaches the end of the tubing')
         self.prime_button.clicked.connect(self.threadpool.prime)
+        
         self.drawPrimeButton()
         button_layout.addWidget(self.prime_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
@@ -304,7 +305,8 @@ class App(QWidget):
         self.threadpool.connection_thread.signals.connected.connect(self.connected)
         
         self.threadpool.weight_thread.signals.error.connect(lambda e, d: self.drawErrorLayout(d))
-        self.threadpool.prime_thread.signals.start.connect(lambda: self.drawPrimeButton())
+        self.threadpool.prime_thread.signals.start.connect(self.drawPrimeButton)
+        self.threadpool.prime_thread.signals.primed.connect(self.drawPrimeButton)
         self.threadpool.prime_thread.signals.start.connect(lambda: self.statusText.setText('Priming'))
         self.threadpool.prime_thread.signals.primed.connect(lambda: self.statusText.setText('Primed'))
         

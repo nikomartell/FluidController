@@ -149,8 +149,8 @@ class MotorThread(QThread):
                     print('linear position is too low; Defaulting to lowest position of -1600')
                     command.position = 0
                 
-                self.linear.move_to(command.position)
-                while self.linear.actual_position != command.position:
+                self.linear.move_to(22000)
+                while self.linear.actual_position != 22000:
                     time.sleep(0.1)
             
             # If the rotary is not at the default position, move it to the default position
