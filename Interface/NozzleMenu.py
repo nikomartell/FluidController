@@ -27,27 +27,19 @@ class NozzleMenu(QMainWindow):
         self.layout.addWidget(self.position_value)
         self.position_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.default_position_button = QPushButton("Return to Home", self)
-        self.default_position_button.clicked.connect(lambda: self.nozzle.move_to(0))
-        self.layout.addWidget(self.default_position_button)
-        
         self.input_layout = QVBoxLayout()
         
-        self.up_button = QPushButton("Up", self)
+        self.up_button = QPushButton("↑", self)
         self.up_button.pressed.connect(self.start_moving_up)
         self.up_button.released.connect(self.stop)
         self.input_layout.addWidget(self.up_button, alignment=Qt.AlignmentFlag.AlignTop)
         
-        self.down_button = QPushButton("Down", self)
+        self.down_button = QPushButton("↓", self)
         self.down_button.pressed.connect(self.start_moving_down)
         self.down_button.released.connect(self.stop)
         self.input_layout.addWidget(self.down_button, alignment=Qt.AlignmentFlag.AlignBottom)
         
         self.layout.addLayout(self.input_layout)
-        
-        self.set_home_button = QPushButton("Set Home", self)
-        self.set_home_button.clicked.connect(self.set_home)
-        self.layout.addWidget(self.set_home_button)
         
         self.central_widget.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.central_widget.keyPressEvent = self.key_press_event
@@ -114,10 +106,5 @@ class NozzleMenu(QMainWindow):
     
     def update_position_label(self):
         # Update the position label with the current nozzle position
-        self.position_value.setText(str(self.nozzle.position))
-        
-    def set_home(self):
-        # Set the current position as the home position
-        self.nozzle.set_home()
         self.position_value.setText(str(self.nozzle.position))
             

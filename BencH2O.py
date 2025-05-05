@@ -18,6 +18,7 @@ from Interface.ControlCenter import ControlCenter
 from Interface.CalibrationMenu import CalibrationMenu
 from Interface.NozzleMenu import NozzleMenu
 from Interface.Keyboard import Keyboard
+import subprocess
 import csv
 import os
 from PyQt6.QtGui import QIcon
@@ -53,8 +54,8 @@ class App(QWidget):
         self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
-        #self.setGeometry(0, 0, 1024, 600)
-        self.showFullScreen()
+        self.setGeometry(0, 0, 1024, 600)
+        #self.showFullScreen()
         self.setCursor(Qt.CursorShape.BlankCursor)
         
         self.initUI() 
@@ -216,7 +217,7 @@ class App(QWidget):
         menu_bar = QWidget()
         menu_bar.setObjectName('menubar')
         menubar = QHBoxLayout(menu_bar)
-        menubar.setContentsMargins(5,0,5,0)
+        menubar.setContentsMargins(5,5,5,5)
         
         #Tools Menu        
         calibrate_action = QPushButton('Calibrate Rotary', self)
@@ -496,44 +497,6 @@ class App(QWidget):
             self.data.to_csv(filepath)
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Error saving data: {e}')
-            
-    async def resetUI(self):
-        # Reset data and control sets
-        self.data = pd.DataFrame(columns=['Time', 'Weight'])
-        self.control_sets = []
-        self.resetGraph()
-        
-        # Reset device and threadpool
-        try:
-            interface = ConnectionManager().connect()
-        except Exception as e:
-            interface = None
-            print(f'Error: {e}')
-        
-        self.device = Controller(interface)
-        self.threadpool = ThreadPool(self.device)
-        
-        # Reinitialize UI elements
-        self.drawErrorLayout()
-        self.drawExecuteButton()
-        self.drawAnalysis()
-        
-        # Restart thread connections
-        self.setConnections()
-        self.threadpool.start_connection()
-        
-        while self.layout.count() > 0:
-            item = self.layout.itemAt(0)
-            widget = item.widget()
-            if widget is not None:
-                self.layout.removeWidget(widget)
-                widget.deleteLater()
-            else:
-                self.layout.removeItem(item)
-        
-        await self.layout.deleteLater()
-        
-        self.initUI
         
         # Add a key event to toggle fullscreen on F11
     def toggle_fullscreen(self):
@@ -541,6 +504,10 @@ class App(QWidget):
             self.showNormal()
         else:
             self.showFullScreen()
+            
+    def resetUI(self):
+        # Reset data and control sets
+        subprocess.run("./reset.sh")
 
     #---------------------------------------------------------#
 
@@ -550,9 +517,6 @@ if __name__ == '__main__':
         ex.failsafeToCSV()
         try:
             if ex.device.nozzle is not None:
-                ex.device.nozzle.move_to(0)
-                while ex.device.nozzle.position != 0:
-                    time.sleep(0.002)
                 ex.device.nozzle.cleanup()
         except Exception as e:
             print(f'Error: {e}')

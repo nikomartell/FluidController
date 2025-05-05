@@ -46,20 +46,11 @@ class Nozzle(QObject):
         self.motor_pins = [self.in1, self.in2, self.in3, self.in4]
         self.position = 0
         
-        self.upper_limit = 600
-        self.lower_limit = -600
-        
     def clockwise(self):
-        if self.position >= (self.upper_limit):
-            print("Motor is at limit, cannot rotate further.")
-            return
         self.direction = 1
         self.rotate()
     
     def counter_clockwise(self):
-        if self.position <= (self.lower_limit):
-            print("Motor is at limit, cannot rotate further.")
-            return
         self.direction = -1
         self.rotate()
         
@@ -90,12 +81,6 @@ class Nozzle(QObject):
             time.sleep(self.step_sleep)
             
         self.stop()
-        
-    def set_home(self):
-        # Set the current position as the home position
-        self.position = 0
-        self.lower_limit = -600
-        self.upper_limit = 600
         
         
     def stop(self):

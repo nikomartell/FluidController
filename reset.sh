@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo pkill -f BencH2O.py
 sudo lsmod | grep ftdi_sio
 sudo rmmod ftdi_sio
 sudo rmmod usbserial

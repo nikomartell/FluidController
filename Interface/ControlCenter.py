@@ -8,6 +8,7 @@ class ControlCenter(QWidget):
         QLineEdit.focusPolicy = Qt.FocusPolicy.ClickFocus
         
         self.Container = QWidget()
+        self.Container.setFixedSize(500, 500)  # Set static size for the container
         self.Container.setObjectName('ControlCenter')
         
         top_layout = QVBoxLayout(self.Container)
@@ -88,7 +89,7 @@ class ControlCenter(QWidget):
         speedLabel = QLabel('Speed (RPM):', self.Container)
         self.speed = QLineEdit()
         self.speed.setPlaceholderText('0 - 1500')
-        self.speed.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
+        self.speed.setValidator(QDoubleValidator(0.0, 1500.0, 0))  # Allow only positive integers
         
         speedLayout = QVBoxLayout()
         speedLayout.addWidget(speedLabel, alignment=Qt.AlignmentFlag.AlignTop)
@@ -100,7 +101,7 @@ class ControlCenter(QWidget):
         accelerationLabel = QLabel('Acceleration (Ml/sec^2):', self.Container)
         self.acceleration = QLineEdit()
         self.acceleration.setPlaceholderText('0 - 2000')
-        self.acceleration.setValidator(QDoubleValidator(0.0, 100.0, 0))  # Allow only integers
+        self.acceleration.setValidator(QDoubleValidator(0.0, 2000.0, 0))  # Allow only integers
         
         accelerationLayout = QVBoxLayout()
         accelerationLayout.addWidget(accelerationLabel, alignment=Qt.AlignmentFlag.AlignTop)
@@ -122,7 +123,7 @@ class ControlCenter(QWidget):
         linearPositionLabel = QLabel('Linear Position:', self.Container)
         self.linear_position = QLineEdit()
         self.linear_position.setPlaceholderText('0 - 42000')
-        self.linear_position.setValidator(QDoubleValidator(-1600, 100.0, 0)) # Allow only integers
+        self.linear_position.setValidator(QDoubleValidator(0.0, 100.0, 0)) # Allow only integers
         
         linearPositionLayout = QVBoxLayout()
         linearPositionLayout.addWidget(linearPositionLabel, alignment=Qt.AlignmentFlag.AlignTop)

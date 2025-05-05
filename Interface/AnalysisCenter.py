@@ -19,7 +19,6 @@ class AnalysisCenter(QWidget):
         weight_layout.addWidget(weightSettings, alignment=Qt.AlignmentFlag.AlignTop)
         weight_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        
         self.weightLabel = QLabel('0.00', self.Container)
         self.weightLabel.setObjectName('weight')
         weight_layout.addWidget(self.weightLabel, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -31,10 +30,8 @@ class AnalysisCenter(QWidget):
         self.flowRateLabel = QLabel('0.00', self.Container)
         self.flowRateLabel.setObjectName('weight')
         weight_layout.addWidget(self.flowRateLabel, alignment=Qt.AlignmentFlag.AlignLeft)
-
         
         self.tareScale = QPushButton('Tare Scale', self.Container)
-        self.tareScale.setObjectName('tare')
         weight_layout.addWidget(self.tareScale, alignment=Qt.AlignmentFlag.AlignRight)
         
         top_layout.addWidget(self.graph_widget)

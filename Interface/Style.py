@@ -16,6 +16,9 @@ def apply_style(parent):
             font-family: 'RocheSans';
             font-size: 16px;
             border: 2px solid #0B41CD;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-bottom-left-radius: 5px;
         }
 
         QWidget#AnalysisCenter {
@@ -30,7 +33,8 @@ def apply_style(parent):
             color: #ffffff;
             border: 2px solid #545860;
             border-radius: 5px;
-            max-width: 400px;
+            max-width: 200px;
+            max-height: 120px;
             padding: 10px;
             font-size: 16px;
             font-weight: bold;
@@ -51,11 +55,6 @@ def apply_style(parent):
         QPushButton:pressed {
             background-color: #0B41CD;
             color: #ffffff;
-        }
-
-        QPushButton#tare {
-            max-width: 200px;
-            max-height: 120px;
         }
         
         QPushButton#small {
@@ -132,7 +131,7 @@ def apply_style(parent):
         }
         
         QTabWidget::pane {
-            border-top: 2px solid #0B41CD;
+            
         }
         
         QTabBar::tab {

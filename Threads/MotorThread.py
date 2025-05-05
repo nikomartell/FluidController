@@ -114,12 +114,12 @@ class MotorThread(QThread):
             self.rotary.max_acceleration = command.acceleration
             
             total_steps = 0
-            speed = 0
+            speed = abs(command.speed)
             if command.flow_direction == 'Dispense':
-                speed = command.speed
+                speed = speed if speed <= 1500 else 1500
                 total_steps = command.strokes * self.controller.rotary_home
             elif command.flow_direction == 'Aspirate':
-                speed = -command.speed
+                speed = -speed if speed <= 1500 else 1500
                 total_steps = -command.strokes * self.controller.rotary_home
             
             if total_steps != 0:

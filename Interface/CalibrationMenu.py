@@ -31,15 +31,19 @@ class CalibrationMenu(QMainWindow):
             
             self.input_layout = QHBoxLayout()
             
-            self.left_button = QPushButton("Left", self)
+            self.left_button = QPushButton("←", self)
             self.left_button.pressed.connect(self.start_moving_left)
             self.left_button.released.connect(self.stop)
+            self.left_button.setStyleSheet("font-size: 24px")
             self.input_layout.addWidget(self.left_button)
             
-            self.right_button = QPushButton("Right", self)
+            
+            self.right_button = QPushButton("→", self)
             self.right_button.pressed.connect(self.start_moving_right)
             self.right_button.released.connect(self.stop)
+            self.right_button.setStyleSheet("font-size: 24px")
             self.input_layout.addWidget(self.right_button)
+            
             
             self.layout.addLayout(self.input_layout)
             
@@ -101,7 +105,7 @@ class CalibrationMenu(QMainWindow):
         # rotate the motor clockwise
         try:
             if self.right_key_pressed:
-                self.rotary.rotate(-100)
+                self.rotary.rotate(-10)
                 self.position_label.setText(str(self.rotary.actual_position))
                 QTimer.singleShot(5, self.move_right)
         except Exception as e:
@@ -111,7 +115,7 @@ class CalibrationMenu(QMainWindow):
         # rotate the motor counter-clockwise
         try:
             if self.left_key_pressed:
-                self.rotary.rotate(100)
+                self.rotary.rotate(10)
                 self.position_label.setText(str(self.rotary.actual_position))
                 QTimer.singleShot(5, self.move_left)
         except Exception as e:
