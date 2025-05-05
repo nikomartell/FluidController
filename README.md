@@ -1,4 +1,4 @@
-# Fluid Controller
+# BencH2O
 
 This software was created for use in a Senior Capstone Project in collaboration with Roche.
 The purpose of this software is to:
@@ -8,10 +8,11 @@ The purpose of this software is to:
 
 The purpose of the system this controls is to dispense various fluids onto slides for medical chemical analysis
 
-To run the software, run the main.py file.
-For the software to operate the system it was made for, the computer must be connected to the system's controller (We used a RaspberryPi) with a weight scale, fluid pump, and fluid sensors connected to it.
+The software is intended to be run on a Raspberry Pi 4B. Some features are proprietary to the system developed with Ventana Roche, such as Priming. Generally, the system requires many explicit parts to function.
 
-This project is currently in development and is purely experimental!
+The required drivers for the weight scale are included with a script for their installation in the "drivers" folder.
+Simply give execution privileges to the installer.sh file, then run it.
+
 It is a proof of concept for implementation, not to be used as a full product.
 Operate carefully!
     
