@@ -11,8 +11,6 @@ class CalibrationMenu(QMainWindow):
             
             self.controller = parent.device
             self.rotary = parent.device.rotary
-            self.limit = 0
-            self.searching = False
             
             self.setWindowTitle("Calibration Menu")
             self.setGeometry(100, 100, 400, 300)
@@ -34,13 +32,13 @@ class CalibrationMenu(QMainWindow):
             self.input_layout = QHBoxLayout()
             
             self.left_button = QPushButton("Left", self)
-            self.left_button.clicked.connect(self.move_left)
-            self.left_button.released.connect(self.rotary.stop)
+            self.left_button.pressed.connect(self.start_moving_left)
+            self.left_button.released.connect(self.stop)
             self.input_layout.addWidget(self.left_button)
             
             self.right_button = QPushButton("Right", self)
-            self.right_button.clicked.connect(self.move_right)
-            self.right_button.released.connect(self.rotary.stop)
+            self.right_button.pressed.connect(self.start_moving_right)
+            self.right_button.released.connect(self.stop)
             self.input_layout.addWidget(self.right_button)
             
             self.layout.addLayout(self.input_layout)
@@ -89,50 +87,47 @@ class CalibrationMenu(QMainWindow):
 
 
     def start_moving_right(self):
-        if self.right_key_pressed:
+        if not self.right_key_pressed:
+            self.right_key_pressed = True
             self.move_right()
-            QTimer.singleShot(5, self.start_moving_right)
     
     def start_moving_left(self):
-        if self.left_key_pressed:
+        if not self.left_key_pressed:
+            self.left_key_pressed = True
             self.move_left()
-            QTimer.singleShot(5, self.start_moving_left)
     
     
     def move_right(self):
         # rotate the motor clockwise
         try:
-            self.rotary.rotate(-10)
-            self.position_label.setText(str(self.rotary.actual_position))
+            if self.right_key_pressed:
+                self.rotary.rotate(-100)
+                self.position_label.setText(str(self.rotary.actual_position))
+                QTimer.singleShot(5, self.move_right)
         except Exception as e:
             print(f'Error: {e}')
     
     def move_left(self):
         # rotate the motor counter-clockwise
         try:
-            self.rotary.rotate(10)
-            self.position_label.setText(str(self.rotary.actual_position))
+            if self.left_key_pressed:
+                self.rotary.rotate(100)
+                self.position_label.setText(str(self.rotary.actual_position))
+                QTimer.singleShot(5, self.move_left)
         except Exception as e:
             print(f'Error: {e}')
+    
+    def stop(self):
+        # Stop the motor
+        self.right_key_pressed = False
+        self.left_key_pressed = False
+        self.rotary.stop()
+        self.position_label.setText(str(self.rotary.actual_position))
             
     def set_home(self):
         try:
-            if self.searching == False:
-                # Set the home position to 0 and user to complete one full rotation
-                self.searching = True
-                self.rotary.set_actual_position(0)
-            elif self.searching == True:
-                # Set the upper limit position that completes the rotation
-                self.searching = False
-                excess = self.rotary.actual_position % self.rotary.drive_settings.get_microstep_resolution()
-                self.limit = abs(self.rotary.actual_position) - excess
-                
-                # Move to the limit position to ensure no excess microsteps in position
-                self.rotary.move_to(self.limit)
-                self.rotary.set_actual_position(0)
-                
-                self.controller.set_rotary_home(self.limit)
-                QMessageBox.information(self, "Set Home", "Home position set successfully!")
+            self.rotary.set_actual_position(0)
+            QMessageBox.information(self, "Set Home", "Home position set successfully!")
                 
         except Exception as e:
             print(f'Error: {e}')

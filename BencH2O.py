@@ -53,10 +53,11 @@ class App(QWidget):
         self.fig.set_facecolor('#f0f0f0')
         
         self.setWindowIcon(QIcon('interface/logo.png'))
-        self.setGeometry(0, 0, 1024, 600)
-        #self.showFullScreen()
+        #self.setGeometry(0, 0, 1024, 600)
+        self.showFullScreen()
+        self.setCursor(Qt.CursorShape.BlankCursor)
         
-        self.initUI()
+        self.initUI() 
             
     
     def initUI(self):
@@ -101,19 +102,15 @@ class App(QWidget):
         remove_tab_button.clicked.connect(self.removeControlCenterTab)
         
         #File Menu
-        export_action = QPushButton('', self)
+        export_action = QPushButton('Export', self)
         export_action.clicked.connect(self.storeCommandsToCSV)
         export_action.setObjectName('small')
-        export_path = QPixmap("Interface/export.svg")
-        export_icon = QIcon(export_path)
-        export_action.setIcon(export_icon)
+        export_action.setStyleSheet('font-size: 10px;')
         
-        import_action = QPushButton('', self)
+        import_action = QPushButton('Import', self)
         import_action.clicked.connect(self.importCommandsFromCSV)
         import_action.setObjectName('small')
-        import_path = QPixmap("Interface/import.svg")
-        import_icon = QIcon(import_path)
-        import_action.setIcon(import_icon)
+        import_action.setStyleSheet('font-size: 10px;')
         
         control_buttons = QVBoxLayout()
         control_buttons.addWidget(add_tab_button)
@@ -221,8 +218,6 @@ class App(QWidget):
         menubar = QHBoxLayout(menu_bar)
         menubar.setContentsMargins(5,0,5,0)
         
-        
-        
         #Tools Menu        
         calibrate_action = QPushButton('Calibrate Rotary', self)
         calibrate_action.clicked.connect(self.openRotaryCalibration)
@@ -233,11 +228,6 @@ class App(QWidget):
         nozzle_action.clicked.connect(self.openNozzleMenu)
         nozzle_action.setObjectName('barbutton')
         menubar.addWidget(nozzle_action)
-        
-        #Help Menu
-        manual_action = QPushButton('Manual', self)
-        manual_action.setObjectName('barbutton')
-        menubar.addWidget(manual_action)
         
         reset_action = QPushButton('Reset', self)
         reset_action.setObjectName('barbutton')
@@ -312,6 +302,14 @@ class App(QWidget):
         self.threadpool.prime_thread.signals.start.connect(lambda: self.drawPrimeButton())
         self.threadpool.prime_thread.signals.start.connect(lambda: self.statusText.setText('Priming'))
         self.threadpool.prime_thread.signals.primed.connect(lambda: self.statusText.setText('Primed'))
+        
+        self.threadpool.graph_thread.signals.result.connect(lambda t, w: self.threadpool.signals.log.emit(t, w))
+        
+        # Set motor thread signal connections
+        self.threadpool.motor_thread.signals.execute.connect(lambda: self.threadpool.graph_thread.resume())
+        self.threadpool.motor_thread.signals.finished.connect(lambda: self.threadpool.graph_thread.pause())
+        self.threadpool.motor_thread.signals.finished.connect(lambda: self.threadpool.signals.finished.emit())
+        self.threadpool.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
     
     # Update Analysis Center based on connection status ----------- #
     def drawAnalysis(self):

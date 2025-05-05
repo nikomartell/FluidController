@@ -46,8 +46,8 @@ class Nozzle(QObject):
         self.motor_pins = [self.in1, self.in2, self.in3, self.in4]
         self.position = 0
         
-        self.upper_limit = 1012
-        self.lower_limit = -1012
+        self.upper_limit = 600
+        self.lower_limit = -600
         
     def clockwise(self):
         if self.position >= (self.upper_limit):
@@ -72,13 +72,13 @@ class Nozzle(QObject):
             
             step_check = (step_check + self.direction) % 8
             time.sleep(self.step_sleep)
-            self.position += self.direction
+            self.position -= self.direction
         
         
         
     def move_to(self, position):
         
-        steps_to_move = abs(position - self.position)
+        steps_to_move = position - self.position
         
         if position > self.position:
             self.direction = 1
@@ -91,6 +91,11 @@ class Nozzle(QObject):
             
         self.stop()
         
+    def set_home(self):
+        # Set the current position as the home position
+        self.position = 0
+        self.lower_limit = -600
+        self.upper_limit = 600
         
         
     def stop(self):
@@ -98,6 +103,19 @@ class Nozzle(QObject):
         GPIO.output(self.motor_pins[1], GPIO.LOW)
         GPIO.output(self.motor_pins[2], GPIO.LOW)
         GPIO.output(self.motor_pins[3], GPIO.LOW)
+        GPIO.cleanup()
+        
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.in1, GPIO.OUT)
+        GPIO.setup(self.in2, GPIO.OUT)
+        GPIO.setup(self.in3, GPIO.OUT)
+        GPIO.setup(self.in4, GPIO.OUT)
+        
+        # initializing
+        GPIO.output(self.in1, GPIO.LOW)
+        GPIO.output(self.in2, GPIO.LOW)
+        GPIO.output(self.in3, GPIO.LOW)
+        GPIO.output(self.in4, GPIO.LOW)
         
     def cleanup(self):
         GPIO.output(self.motor_pins[0], GPIO.LOW)

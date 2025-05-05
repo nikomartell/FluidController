@@ -16,9 +16,13 @@ class Controller(QObject):
         self.rotary_home = 6400
         self.primed = False
         
+        
+        
         if interface:
             self.linear.stop()
+            print(self.linear.actual_position)
             self.rotary.stop()
+            print(self.rotary.actual_position)
         self.scale = Scale()
             #print(f'Error: {e}')
         try:

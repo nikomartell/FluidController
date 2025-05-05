@@ -121,7 +121,7 @@ class ControlCenter(QWidget):
         # linear Position
         linearPositionLabel = QLabel('Linear Position:', self.Container)
         self.linear_position = QLineEdit()
-        self.linear_position.setPlaceholderText('-1600 - 10000')
+        self.linear_position.setPlaceholderText('0 - 42000')
         self.linear_position.setValidator(QDoubleValidator(-1600, 100.0, 0)) # Allow only integers
         
         linearPositionLayout = QVBoxLayout()

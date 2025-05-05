@@ -141,13 +141,13 @@ class MotorThread(QThread):
             
             if isinstance(command.position, int):
                 
-                if command.position > 10000:
+                if command.position > 42000:
                     print('linear Position to high; Defaulting to highest position of 4600')
-                    command.position = 10000
+                    command.position = 42000
                     
-                elif command.position < -1600:
+                elif command.position < 0:
                     print('linear position is too low; Defaulting to lowest position of -1600')
-                    command.position = -1600
+                    command.position = 0
                 
                 self.linear.move_to(command.position)
                 while self.linear.actual_position != command.position:

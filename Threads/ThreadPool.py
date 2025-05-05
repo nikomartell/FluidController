@@ -7,6 +7,7 @@ from Threads.ConnectionThread import ConnectionThread
 from Threads.WeightThread import WeightThread
 from Threads.PrimeThread import PrimeThread
 from Controller.Controller import Controller
+from Controller.CommandSet import CommandSet
 import time
 
 class ThreadPool(QThreadPool):
@@ -47,24 +48,21 @@ class ThreadPool(QThreadPool):
     def prime(self):
         # Start the sensor thread
         self.prime_thread.start()
+        
+    def flush(self):
+        command = CommandSet(speed=1000, duration=20, flow_direction="Aspirate")
+        self.motor_thread.command_set = command
     
     # Start the motor thread
     def start_process(self, command_set):
         self.signals.started.emit()
         # Start the graph thread but pause it until a command is given
         
+        self.graph_thread.pause()
+        self.graph_thread.start()
+        
         self.motor_thread.command_set = command_set
-        
-        # Set graph thread signal connections
-        self.graph_thread.signals.result.connect(lambda t, w: self.signals.log.emit(t, w))
-        
-        # Set motor thread signal connections
-        self.motor_thread.signals.start.connect(self.graph_thread.reset)
-        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.start())
-        self.motor_thread.signals.execute.connect(lambda: self.graph_thread.resume())
-        self.motor_thread.signals.finished.connect(lambda: self.graph_thread.pause())
-        self.motor_thread.signals.finished.connect(lambda: self.signals.finished.emit())
-        self.motor_thread.signals.error.connect(lambda e: QMessageBox.critical(None, 'Error', f'Error: {e}'))
+        self.graph_thread.reset()
         
         self.motor_thread.start()
         

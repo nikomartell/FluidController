@@ -59,7 +59,7 @@ def apply_style(parent):
         }
         
         QPushButton#small {
-            width: 25px;
+            width: 40px;
             height: 25px;
             padding: 5px;
             font-size: 24px;
