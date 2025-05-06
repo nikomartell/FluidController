@@ -7,12 +7,12 @@ class CommandSet:
         self.flow_direction = flow_direction
         self.duration = float(duration) if duration != '' else 5
         self.iterations = int(iterations) if iterations != '' else 1
-        self.position = int(position) if (position != '') else 0
+        self.position = int(position) if (position != '') else -1
         if position == '':
             if isinstance(controller, Controller):
                 self.position = controller.linear.get_actual_position()
         else:
-            self.position = int(position) if (position != '') else 0
+            self.position = int(position) if (position != '') else -1
         
     def print(self):
         print(f'Speed: {self.speed}')
